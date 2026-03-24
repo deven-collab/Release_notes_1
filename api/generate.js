@@ -18,7 +18,6 @@ HARD RULES — NEVER include:
 - Internal ticket IDs of any kind (VTECH, PP, DEVOPS, or similar)
 - Technical terms: API, backend, frontend, FE, BE, refactor, cache, schema, migration, deployment, or similar engineering language
 - Competitor names or references
-- Any item that is incomplete, in QA, or pending verification
 - Speculation or detail not present in the source ticket description
 - Any indication that these notes were auto-generated
 
@@ -67,17 +66,16 @@ function extractDescription(desc) {
   return '';
 }
 
-const INCOMPLETE_STATUSES = ['qa in progress', 'pending verification', 'in progress', 'dev to do (github)', 'to do', 'open'];
-
-function isIncomplete(status) {
-  return INCOMPLETE_STATUSES.includes((status || '').toLowerCase());
+function matchesStatus(ticketStatus, statusFilter) {
+  if (!statusFilter || statusFilter.length === 0) return true;
+  return statusFilter.map(s => s.toLowerCase()).includes((ticketStatus || '').toLowerCase());
 }
 
 function matchesClient(clientCategory, clientFilter) {
-  if (!clientFilter || clientFilter === 'all') return true;
+  if (!clientFilter || clientFilter.length === 0) return true;
   const val = (clientCategory || '').toLowerCase();
   if (val === 'product') return true;
-  return val === clientFilter.toLowerCase();
+  return clientFilter.map(c => c.toLowerCase()).includes(val);
 }
 
 async function callClaude(tickets, clientName) {
@@ -85,7 +83,7 @@ async function callClaude(tickets, clientName) {
     `Ticket: ${t.key}\nTitle: ${t.summary}\nDescription: ${t.description || 'No description provided.'}\nEngineering-only: ${t.engineeringOnly ? 'Yes' : 'No'}`
   ).join('\n\n---\n\n');
 
-  const clientLabel = clientName === 'all' ? 'all clients' : clientName;
+  const clientLabel = Array.isArray(clientName) ? clientName.join(', ') : clientName;
 
   const prompt = `Generate release notes for ${clientLabel}.
 
@@ -136,14 +134,12 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { email, devopsTicket, clientFilter } = req.body || {};
+  const { email, devopsTicket, clientFilter, statusFilter } = req.body || {};
 
-  // Auth — email whitelist
   if (!email || !ALLOWED_EMAILS.includes(email.toLowerCase())) {
     return res.status(403).json({ error: 'Access denied. Your email is not authorised.' });
   }
-
-  if (!devopsTicket || !clientFilter) {
+  if (!devopsTicket || !clientFilter || !statusFilter) {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
 
@@ -159,24 +155,29 @@ export default async function handler(req, res) {
 
     steps.push(`Found ${vtechLinks.length} linked tickets`);
 
-    // Step 2: Resolve each VTECH → PP
+    // Step 2: Resolve each VTECH → PP, filter by status
     const ppMap = {};
 
     for (const vk of vtechLinks) {
       const vtech = await fetchIssue(vk, 'summary,issuelinks,customfield_10627,description,status');
+      const vtechStatus = vtech.fields.status?.name;
+
       const cloneLink = (vtech.fields.issuelinks || []).find(
         l => l.type.name === 'Cloners' && l.outwardIssue?.key?.startsWith('PP-')
       );
 
       if (cloneLink) {
         const ppKey = cloneLink.outwardIssue.key;
-        if (ppMap[ppKey]) continue; // deduplicate
+        if (ppMap[ppKey]) continue;
         const pp = await fetchIssue(ppKey, 'summary,customfield_10627,description,status');
-        // Skip incomplete items
-        if (isIncomplete(pp.fields.status?.name)) {
-          steps.push(`Skipping ${ppKey} (${pp.fields.status?.name})`);
+        const ppStatus = pp.fields.status?.name;
+
+        // Use VTECH status for filtering (it's the implementation ticket)
+        if (!matchesStatus(vtechStatus, statusFilter)) {
+          steps.push(`Skipping ${ppKey} — status "${vtechStatus}" not selected`);
           continue;
         }
+
         ppMap[ppKey] = {
           key: ppKey,
           summary: pp.fields.summary,
@@ -185,10 +186,9 @@ export default async function handler(req, res) {
           engineeringOnly: false
         };
       } else {
-        // No PP parent — engineering ticket
         if (ppMap[vk]) continue;
-        if (isIncomplete(vtech.fields.status?.name)) {
-          steps.push(`Skipping ${vk} (${vtech.fields.status?.name})`);
+        if (!matchesStatus(vtechStatus, statusFilter)) {
+          steps.push(`Skipping ${vk} — status "${vtechStatus}" not selected`);
           continue;
         }
         ppMap[vk] = {
@@ -203,7 +203,7 @@ export default async function handler(req, res) {
 
     // Step 3: Filter by client
     const filtered = Object.values(ppMap).filter(t => matchesClient(t.clientCategory, clientFilter));
-    steps.push(`${filtered.length} tickets match client filter`);
+    steps.push(`${filtered.length} tickets match filters`);
 
     if (filtered.length === 0) {
       return res.status(200).json({ notes: [], steps, empty: true });
