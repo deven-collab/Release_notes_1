@@ -101,7 +101,12 @@
   .output-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .chip { font-size: 12px; font-weight: 500; padding: 5px 11px; border-radius: 20px; border: 1px solid #e5e7eb; color: #6b7280; background: #f9fafb; }
   .chip.client { background: #f0fdfc; border-color: #99e6ea; color: #0f766e; font-weight: 600; }
-  .output-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .output-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .export-group { display: flex; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+  .export-group .btn-secondary { border: none; border-radius: 0; border-right: 1px solid #e5e7eb; }
+  .export-group .btn-secondary:last-child { border-right: none; }
+  .export-alt { font-size: 11px; color: #9ca3af; padding: 8px 10px; }
+  .export-alt:hover { color: #0f766e; }
 
   /* Category */
   .category-section { display: flex; flex-direction: column; gap: 12px; }
@@ -528,8 +533,12 @@
       <div class="output-actions">
         <button class="btn-secondary" onclick="copyNotes()">⎘ Copy</button>
         <button class="btn-secondary" onclick="copyForEmail()">✉ Copy for Email</button>
-        <button class="btn-secondary" onclick="downloadPDF()">⬇ PDF</button>
+        <div class="export-group">
+          <button class="btn-secondary" onclick="downloadPDF(false)">⬇ PDF</button>
+          <button class="btn-secondary export-alt" onclick="downloadPDF(true)" title="Export without client name">No Client</button>
+        </div>
         <button class="btn-secondary" onclick="downloadDOCX()">⬇ Word</button>
+        <button class="btn-secondary" onclick="exportGoogleDoc()">⬇ Google Doc</button>
       </div>`;
     area.appendChild(topbar);
 
@@ -645,7 +654,7 @@
   function copyForEmail(){ navigator.clipboard.writeText(buildEmailSummary()).then(()=>{const btns=document.querySelectorAll('.output-actions .btn-secondary');btns[1].textContent='✓ Copied';setTimeout(()=>{btns[1].innerHTML='✉ Copy for Email';},2000);}); }
 
   // PDF — global standard redesign
-  function downloadPDF(){
+  function downloadPDF(hideClient=false){
     if(!currentNotes||!currentMeta) return;
     const doc=new jsPDF({unit:'pt',format:'a4'});
     const W=595, ML=56, MR=56, CW=W-ML-MR;
@@ -667,19 +676,23 @@
       return doc.splitTextToSize(text || '', maxW);
     }
 
-    function addHeader(){
+    function addHeader(hideClient){
       // Full-width teal header bar
-      doc.setFillColor(...TEAL); doc.rect(0,0,W,72,'F');
-      // Logo — "Voiro" wordmark in white
+      doc.setFillColor(...TEAL); doc.rect(0,0,W,76,'F');
+      // "Voiro" bold
       doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.setTextColor(255,255,255);
-      doc.text('Voiro',ML,44);
-      doc.setFont('helvetica','normal'); doc.setFontSize(15); doc.setTextColor(200,245,245);
-      doc.text(' Release Notes',ML+51,44);
-      // Client name right-aligned
-      doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(255,255,255);
-      doc.text(currentMeta.client, W-MR, 36, {align:'right'});
+      doc.text('Voiro',ML,46);
+      // Measure "Voiro" width then place "Release Notes" after with a gap
+      const voiroW = doc.getTextWidth('Voiro');
+      doc.setFont('helvetica','normal'); doc.setFontSize(14); doc.setTextColor(220,248,248);
+      doc.text('Release Notes', ML + voiroW + 6, 46);
+      // Right side
+      if(!hideClient){
+        doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(255,255,255);
+        doc.text(currentMeta.client, W-MR, 38, {align:'right'});
+      }
       doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(200,245,245);
-      doc.text(today, W-MR, 52, {align:'right'});
+      doc.text(today, W-MR, 56, {align:'right'});
     }
 
     function addFooter(pageNum, totalPages){
@@ -690,13 +703,13 @@
     }
 
     function checkPage(y, neededH){
-      if(y + neededH > 810){ doc.addPage(); addHeader(); return 90; }
+      if(y + neededH > 810){ doc.addPage(); addHeader(hideClient); return 96; }
       return y;
     }
 
     // Page 1
-    addHeader();
-    let y = 90;
+    addHeader(hideClient);
+    let y = 96;
 
     // Executive summary block
     if(currentMeta.summary){
@@ -772,7 +785,7 @@
         const bulletData = (note.bullets||[]).map(b=>doc.splitTextToSize(b, BULL_W));
         const bulletLineCount = bulletData.reduce((a,b)=>a+b.length,0);
 
-        const clientH = clientTxt ? 20 : 0;
+        const clientH = (clientTxt && !hideClient) ? 20 : 0;
         const titleH = titleLines.length * 16;
         const sumH = sumLines.length * 14 + 10;
         const bullH = bulletLineCount > 0 ? bulletLineCount * 13 + 16 : 0;
@@ -788,8 +801,8 @@
 
         let cy = y + 16;
 
-        // Client tag
-        if(clientTxt){
+        // Client tag — only if not hiding client names
+        if(clientTxt && !hideClient){
           doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
           const tw = doc.getTextWidth(clientTxt) + 14;
           doc.setFillColor(...BGTEAL); doc.setDrawColor(153,230,234); doc.setLineWidth(0.3);
@@ -880,6 +893,67 @@
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a'); a.href=url; a.download=`Voiro_Release_Notes_${currentMeta.devopsId}_${new Date().toISOString().split('T')[0]}.doc`;
     a.click(); URL.revokeObjectURL(url);
+  }
+
+  function exportGoogleDoc(){
+    if(!currentNotes||!currentMeta) return;
+    // Google Docs only accepts plain text or HTML pasted — we open a new tab with formatted HTML
+    // that the user can copy-paste into Google Docs, or we use the Docs URL trick
+    const today=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+    let html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Voiro Release Notes</title>
+    <style>
+      body{font-family:Arial,sans-serif;max-width:750px;margin:40px auto;color:#111827;font-size:14px;line-height:1.6;}
+      h1{font-size:24px;color:#0f766e;margin-bottom:4px;border-bottom:2px solid #37b6bb;padding-bottom:8px;}
+      .meta{font-size:12px;color:#6b7280;margin-bottom:8px;}
+      .summary-box{background:#f0fdfc;border-left:4px solid #37b6bb;padding:12px 16px;margin:16px 0;border-radius:4px;font-size:13px;color:#134e4a;}
+      h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#9ca3af;margin:28px 0 12px;border-bottom:1px solid #e5e7eb;padding-bottom:6px;}
+      .entry{margin-bottom:20px;padding:16px;border:1px solid #e5e7eb;border-left:3px solid #37b6bb;border-radius:4px;}
+      .badge{display:inline-block;font-size:10px;font-weight:bold;text-transform:uppercase;padding:2px 8px;border-radius:3px;margin-bottom:8px;}
+      .badge-improvement{background:#f0fdfc;color:#0f766e;}
+      .badge-feature{background:#f0fdf4;color:#15803d;}
+      .badge-fix{background:#fef2f2;color:#dc2626;}
+      .badge-platform{background:#f9fafb;color:#6b7280;}
+      .client-tag{font-size:10px;font-weight:bold;text-transform:uppercase;color:#0f766e;margin-right:8px;}
+      h3{font-size:14px;font-weight:bold;color:#111827;margin:6px 0 8px;}
+      p{color:#4b5563;margin:0 0 10px;}
+      ul{margin:0;padding-left:20px;}
+      li{color:#4b5563;margin-bottom:4px;font-size:13px;}
+    </style></head><body>
+    <h1>Voiro Release Notes</h1>
+    <div class="meta">${currentMeta.client} &nbsp;·&nbsp; ${currentMeta.devopsId} &nbsp;·&nbsp; ${today}</div>`;
+    if(currentMeta.summary) html+=`<div class="summary-box">${currentMeta.summary}</div>`;
+    CATEGORIES.forEach(cat=>{
+      const items=currentNotes.filter(n=>!n.flag&&n.category===cat);
+      if(!items.length) return;
+      const badgeClass={'New Features':'feature','Improvements':'improvement','Bug Fixes':'fix','Platform & Performance':'platform'}[cat]||'platform';
+      html+=`<h2>${cat}</h2>`;
+      items.forEach(note=>{
+        html+=`<div class="entry">`;
+        html+=`<span class="badge badge-${badgeClass}">${cat}</span>`;
+        if(note.client&&note.client!=='All') html+=`<span class="client-tag">${normalizeClient(note.client)}</span>`;
+        html+=`<h3>${note.title||''}</h3>`;
+        html+=`<p>${note.summary||note.description||''}</p>`;
+        if((note.bullets||[]).length>0) html+=`<ul>${note.bullets.map(b=>`<li>${b}</li>`).join('')}</ul>`;
+        html+=`</div>`;
+      });
+    });
+    html+=`</body></html>`;
+    // Open in new tab — user can select all and paste into Google Docs
+    const blob=new Blob([html],{type:'text/html'});
+    const url=URL.createObjectURL(blob);
+    const w=window.open(url,'_blank');
+    if(w){
+      setTimeout(()=>{
+        w.document.title='Voiro Release Notes — Copy into Google Docs';
+        // Show instructions
+        const banner=w.document.createElement('div');
+        banner.style.cssText='position:fixed;top:0;left:0;right:0;background:#37b6bb;color:#fff;padding:12px 20px;font-family:Arial,sans-serif;font-size:13px;z-index:9999;display:flex;align-items:center;justify-content:space-between;';
+        banner.innerHTML='<span>To import into Google Docs: Press <strong>Ctrl+A</strong> (or Cmd+A) to select all, then copy and paste into a new Google Doc.</span><button onclick="this.parentElement.remove()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:4px 10px;border-radius:4px;cursor:pointer;">✕</button>';
+        w.document.body.insertBefore(banner, w.document.body.firstChild);
+        w.document.body.style.marginTop='48px';
+      }, 300);
+    }
+    setTimeout(()=>URL.revokeObjectURL(url), 10000);
   }
 </script>
 </body>
