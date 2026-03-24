@@ -10,10 +10,8 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Inter', sans-serif; background: #f5f5f7; color: #1a1a2e; min-height: 100vh; }
 
-  /* Header */
-  .header { background: #fff; border-bottom: 1px solid #e5e5ea; padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+  .header { background: #fff; border-bottom: 1px solid #e5e5ea; padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
   .logo { display: flex; align-items: center; gap: 10px; }
-  .logo svg { width: 24px; height: 24px; }
   .logo-text { font-size: 15px; font-weight: 600; color: #1a1a2e; }
   .user-pill { display: none; align-items: center; gap: 6px; background: #f5f5f7; border: 1px solid #e5e5ea; border-radius: 20px; padding: 4px 12px 4px 8px; font-size: 12px; color: #4f46e5; font-weight: 500; }
   .user-pill.visible { display: flex; }
@@ -42,8 +40,8 @@
 
   /* Multiselect */
   .ms-wrap { position: relative; }
-  .ms-trigger { font-family: 'Inter', sans-serif; font-size: 14px; background: #fff; border: 1px solid #d1d1db; border-radius: 8px; color: #1a1a2e; padding: 6px 32px 6px 8px; outline: none; cursor: pointer; width: 100%; text-align: left; transition: border-color 0.15s, box-shadow 0.15s; display: flex; align-items: flex-start; justify-content: space-between; min-height: 40px; flex-wrap: wrap; gap: 4px; }
-  .ms-trigger:focus, .ms-trigger.open { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.08); }
+  .ms-trigger { font-family: 'Inter', sans-serif; font-size: 14px; background: #fff; border: 1px solid #d1d1db; border-radius: 8px; color: #1a1a2e; padding: 6px 32px 6px 8px; cursor: pointer; width: 100%; text-align: left; transition: border-color 0.15s, box-shadow 0.15s; display: flex; align-items: flex-start; justify-content: space-between; min-height: 40px; flex-wrap: wrap; gap: 4px; }
+  .ms-trigger.open, .ms-trigger:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.08); }
   .ms-trigger.disabled { background: #f5f5f7; color: #8e8ea0; cursor: not-allowed; }
   .ms-arrow { font-size: 10px; color: #8e8ea0; flex-shrink: 0; margin-left: 4px; padding-top: 3px; }
   .ms-placeholder { color: #b0b0c0; font-size: 14px; padding: 2px 4px; }
@@ -65,6 +63,8 @@
   .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-secondary { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; background: #fff; color: #3a3a52; border: 1px solid #d1d1db; border-radius: 8px; padding: 8px 16px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
   .btn-secondary:hover { border-color: #4f46e5; color: #4f46e5; }
+  .btn-danger { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; background: #fff; color: #dc2626; border: 1px solid #fecaca; border-radius: 8px; padding: 8px 14px; cursor: pointer; transition: all 0.15s; }
+  .btn-danger:hover { background: #fef2f2; }
 
   /* Steps */
   .steps-box { background: #f9f9fb; border: 1px solid #e5e5ea; border-radius: 10px; padding: 16px 20px; display: none; }
@@ -90,23 +90,54 @@
   .category-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #8e8ea0; padding-bottom: 8px; border-bottom: 1px solid #e5e5ea; }
 
   /* Note card */
-  .note-card { background: #fff; border: 1px solid #e5e5ea; border-radius: 10px; padding: 20px; animation: fadeUp 0.25s ease both; }
+  .note-card { background: #fff; border: 1px solid #e5e5ea; border-radius: 10px; padding: 20px; animation: fadeUp 0.25s ease both; position: relative; cursor: grab; }
+  .note-card.dragging { opacity: 0.5; cursor: grabbing; }
+  .note-card.drag-over { border-color: #4f46e5; border-style: dashed; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   .note-card-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .note-card-left { display: flex; align-items: center; gap: 8px; }
   .note-client-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #4f46e5; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 4px; padding: 2px 8px; }
   .note-pp-link { font-size: 11px; color: #8e8ea0; text-decoration: none; font-family: monospace; }
   .note-pp-link:hover { color: #4f46e5; text-decoration: underline; }
+  .note-card-actions { display: flex; gap: 6px; opacity: 0; transition: opacity 0.15s; }
+  .note-card:hover .note-card-actions { opacity: 1; }
+  .card-action-btn { background: none; border: 1px solid #e5e5ea; border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; color: #8e8ea0; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+  .card-action-btn:hover { border-color: #4f46e5; color: #4f46e5; }
+  .card-action-btn.delete:hover { border-color: #fecaca; color: #dc2626; }
   .note-title { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 8px; line-height: 1.4; }
   .note-summary { font-size: 14px; line-height: 1.65; color: #52526e; margin-bottom: 12px; }
   .note-bullets { list-style: none; display: flex; flex-direction: column; gap: 6px; }
   .note-bullets li { font-size: 13px; color: #52526e; line-height: 1.5; display: flex; gap: 8px; align-items: flex-start; }
   .note-bullets li::before { content: '→'; color: #4f46e5; font-weight: 600; flex-shrink: 0; margin-top: 1px; }
 
+  /* Add entry button */
+  .add-entry-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 12px 16px; background: #fff; border: 1px dashed #d1d1db; border-radius: 10px; color: #8e8ea0; font-size: 13px; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.15s; }
+  .add-entry-btn:hover { border-color: #4f46e5; color: #4f46e5; }
+
   /* Flag card */
   .flag-card { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 14px 18px; }
   .flag-label { font-size: 11px; font-weight: 600; color: #d97706; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
   .flag-reason { font-size: 13px; color: #92400e; }
   .empty-msg { background: #fff; border: 1px solid #e5e5ea; border-radius: 10px; padding: 40px; text-align: center; color: #8e8ea0; font-size: 14px; }
+
+  /* Edit Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; padding: 24px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 16px; padding: 28px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.15); }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; }
+  .modal-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .modal-field label { font-size: 13px; font-weight: 500; color: #3a3a52; }
+  .modal-field input, .modal-field textarea, .modal-field select { font-family: 'Inter', sans-serif; font-size: 14px; border: 1px solid #d1d1db; border-radius: 8px; color: #1a1a2e; padding: 9px 12px; outline: none; width: 100%; transition: border-color 0.15s; }
+  .modal-field input:focus, .modal-field textarea:focus, .modal-field select:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.08); }
+  .modal-field textarea { resize: vertical; min-height: 80px; }
+  .bullet-list { display: flex; flex-direction: column; gap: 8px; }
+  .bullet-item { display: flex; gap: 8px; align-items: center; }
+  .bullet-item input { flex: 1; }
+  .bullet-remove { background: none; border: none; color: #8e8ea0; cursor: pointer; font-size: 16px; padding: 4px; }
+  .bullet-remove:hover { color: #dc2626; }
+  .add-bullet-btn { background: none; border: 1px dashed #d1d1db; border-radius: 6px; color: #8e8ea0; font-size: 13px; padding: 6px 12px; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 4px; }
+  .add-bullet-btn:hover { border-color: #4f46e5; color: #4f46e5; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #e5e5ea; }
 
   @keyframes spin { to { transform: rotate(360deg); } }
   .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
@@ -118,7 +149,7 @@
 
 <div class="header">
   <div class="logo">
-    <svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><g fill="none"><path d="M27.695 13.29L4.891 3.548l.541-.442A13.621 13.621 0 0114.087 0c7.087 0 13.042 5.532 13.565 12.594l.043.697zM6.527 3.324l20.197 8.624C25.91 5.668 20.484.852 14.081.852c-2.72 0-5.376.872-7.554 2.47" fill="#474647"/><path d="M3.87 23.147l-.193-.2A12.872 12.872 0 010 13.914a12.88 12.88 0 013.752-9.116l.193-.193 21.896 9.309-21.97 9.234z" fill="#3BB6BB"/><path d="M13.844 27.757a13.87 13.87 0 01-8.798-3.154l-.547-.455 23.196-9.874-.056.71c-.541 7.16-6.602 12.773-13.795 12.773M6.166 24.38a13.017 13.017 0 007.678 2.513c6.496 0 12.01-4.89 12.862-11.256L6.166 24.38z" fill="#CE5450"/></g></svg>
+    <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg"><g fill="none"><path d="M23.739 11.391L4.192 3.042l.463-.379A11.675 11.675 0 0112.074 0c6.075 0 11.179 4.741 11.623 10.795l.042.596z" fill="#474647"/><path d="M3.317 19.84l-.165-.172A11.033 11.033 0 010 11.927a11.04 11.04 0 013.215-7.814l.165-.165 18.768 7.978L3.317 19.84z" fill="#3BB6BB"/><path d="M11.866 23.791a11.888 11.888 0 01-7.541-2.703l-.469-.39 19.882-8.464-.048.609c-.464 6.137-5.659 10.948-11.824 10.948" fill="#CE5450"/></g></svg>
     <span class="logo-text">Voiro Release Notes</span>
   </div>
   <div class="user-pill" id="userPill">
@@ -162,9 +193,9 @@
     <div class="form-card-title">Generate Release Notes</div>
     <div class="form-row">
       <div class="field">
-        <label>DEVOPS Ticket</label>
-        <input type="text" id="devopsTicket" placeholder="DEVOPS-458 or paste full URL" />
-        <span class="field-hint">Accepts ticket ID or Jira URL</span>
+        <label>DEVOPS Ticket ID or URL</label>
+        <input type="text" id="devopsTicket" placeholder="DEVOPS-458 or paste Jira URL" />
+        <span class="field-hint">Accepts ticket ID or full Jira URL</span>
       </div>
       <div class="field">
         <label>Client</label>
@@ -200,16 +231,50 @@
   <div class="output-area" id="outputArea"></div>
 </div>
 
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title">Edit Release Note</div>
+    <div class="modal-field">
+      <label>Category</label>
+      <select id="editCategory">
+        <option>New Features</option>
+        <option>Improvements</option>
+        <option>Bug Fixes</option>
+        <option>Platform & Performance</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Title</label>
+      <input type="text" id="editTitle" placeholder="What changed, in plain terms" />
+    </div>
+    <div class="modal-field">
+      <label>Summary</label>
+      <textarea id="editSummary" placeholder="2-3 sentences: what changed and what users can now do differently"></textarea>
+    </div>
+    <div class="modal-field">
+      <label>Bullet Points</label>
+      <div class="bullet-list" id="editBullets"></div>
+      <button class="add-bullet-btn" onclick="addBullet()">+ Add bullet</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const { jsPDF } = window.jspdf;
-  let currentUser = null, currentNotes = null, currentMeta = null;
+  let currentUser = null, currentNotes = null, currentMeta = null, editingIndex = null;
 
-  const CLIENT_NAME_MAP = { 'carrefourr': 'Carrefour', 'carrefour': 'Carrefour' };
-  function normalizeClientName(name) { return CLIENT_NAME_MAP[(name||'').toLowerCase()] || name; }
-
+  const CLIENT_NAME_MAP = { 'carrefourr': 'Carrefour' };
+  const CATEGORIES = ['New Features','Improvements','Bug Fixes','Platform & Performance'];
   const ALL_STATUSES = ['To Do','Dev To Do (Github)','In Progress','QA In Progress','Testing Completed','Pending Verification','TO BE REVIEWED','REVIEWED','Done'];
   const FALLBACK_CLIENTS = ['Carrefour','DSTV','Flipkart','Myntra','Paytm','SonyLiv','Zee5'];
   const msState = { client: [], status: [] };
+
+  function normalizeClient(n) { return CLIENT_NAME_MAP[(n||'').toLowerCase()] || n; }
 
   document.addEventListener('click', e => {
     if (!e.target.closest('#clientWrap')) closeDropdown('client');
@@ -219,396 +284,350 @@
   function toggleDropdown(name) {
     const trigger = document.getElementById(name+'Trigger');
     if (trigger.classList.contains('disabled')) return;
-    const dropdown = document.getElementById(name+'Dropdown');
-    const isOpen = dropdown.classList.contains('open');
+    const dd = document.getElementById(name+'Dropdown');
+    const open = dd.classList.contains('open');
     closeDropdown('client'); closeDropdown('status');
-    if (!isOpen) { dropdown.classList.add('open'); trigger.classList.add('open'); }
+    if (!open) { dd.classList.add('open'); trigger.classList.add('open'); }
   }
   function closeDropdown(name) {
     document.getElementById(name+'Dropdown').classList.remove('open');
     document.getElementById(name+'Trigger').classList.remove('open');
   }
   function buildDropdown(name, options, includeAll=false) {
-    const dropdown = document.getElementById(name+'Dropdown');
-    dropdown.innerHTML = '';
+    const dd = document.getElementById(name+'Dropdown');
+    dd.innerHTML = '';
     if (includeAll) {
       const el = document.createElement('div');
-      el.className = 'ms-option ms-select-all' + (msState[name].length===options.length?' selected':'');
-      el.innerHTML = `<div class="ms-checkbox">${msState[name].length===options.length?'✓':''}</div><span>All Clients</span>`;
-      el.onclick = () => toggleAll(name, options);
-      dropdown.appendChild(el);
+      el.className='ms-option ms-select-all'+(msState[name].length===options.length?' selected':'');
+      el.innerHTML=`<div class="ms-checkbox">${msState[name].length===options.length?'✓':''}</div><span>All Clients</span>`;
+      el.onclick=()=>toggleAll(name,options); dd.appendChild(el);
     }
-    options.forEach(opt => {
-      const el = document.createElement('div');
-      const sel = msState[name].includes(opt);
-      el.className = 'ms-option'+(sel?' selected':'');
-      el.innerHTML = `<div class="ms-checkbox">${sel?'✓':''}</div><span>${opt}</span>`;
-      el.onclick = () => toggleOption(name, opt, options);
-      dropdown.appendChild(el);
+    options.forEach(opt=>{
+      const el=document.createElement('div');
+      const sel=msState[name].includes(opt);
+      el.className='ms-option'+(sel?' selected':'');
+      el.innerHTML=`<div class="ms-checkbox">${sel?'✓':''}</div><span>${opt}</span>`;
+      el.onclick=()=>toggleOption(name,opt,options); dd.appendChild(el);
     });
   }
-  function toggleAll(name, options) {
-    msState[name] = msState[name].length===options.length ? [] : [...options];
-    buildDropdown(name, options, name==='client');
-    updateTrigger(name);
-  }
-  function toggleOption(name, opt, options) {
-    const idx = msState[name].indexOf(opt);
-    if (idx===-1) msState[name].push(opt); else msState[name].splice(idx,1);
-    buildDropdown(name, options, name==='client');
-    updateTrigger(name);
-  }
-  function updateTrigger(name) {
-    const trigger = document.getElementById(name+'Trigger');
-    const placeholder = document.getElementById(name+'Placeholder');
-    const selected = msState[name];
+  function toggleAll(name,options){ msState[name]=msState[name].length===options.length?[...]:([...options]); buildDropdown(name,options,name==='client'); updateTrigger(name); }
+  function toggleOption(name,opt,options){ const i=msState[name].indexOf(opt); if(i===-1)msState[name].push(opt);else msState[name].splice(i,1); buildDropdown(name,options,name==='client'); updateTrigger(name); }
+  function updateTrigger(name){
+    const trigger=document.getElementById(name+'Trigger');
+    const ph=document.getElementById(name+'Placeholder');
+    const sel=msState[name];
     Array.from(trigger.querySelectorAll('.ms-tag')).forEach(t=>t.remove());
-    const arrow = trigger.querySelector('.ms-arrow');
-    if (selected.length===0) {
-      placeholder.style.display=''; placeholder.textContent=name==='client'?'Select clients...':'Select statuses...';
-    } else {
-      placeholder.style.display='none';
-      selected.forEach(s => {
-        const tag = document.createElement('span');
-        tag.className='ms-tag';
-        tag.innerHTML=`${s} <span class="ms-tag-remove" onclick="event.stopPropagation();removeOption('${name}','${s}')">✕</span>`;
-        trigger.insertBefore(tag, arrow);
-      });
+    const arrow=trigger.querySelector('.ms-arrow');
+    if(sel.length===0){ ph.style.display=''; ph.textContent=name==='client'?'Select clients...':'Select statuses...'; }
+    else {
+      ph.style.display='none';
+      sel.forEach(s=>{ const tag=document.createElement('span'); tag.className='ms-tag'; tag.innerHTML=`${s} <span class="ms-tag-remove" onclick="event.stopPropagation();removeOption('${name}','${s}')">✕</span>`; trigger.insertBefore(tag,arrow); });
     }
   }
-  function removeOption(name, opt) {
-    const idx = msState[name].indexOf(opt);
-    if (idx!==-1) msState[name].splice(idx,1);
-    const options = name==='client' ? (window._clientOptions||FALLBACK_CLIENTS) : ALL_STATUSES;
-    buildDropdown(name, options, name==='client');
-    updateTrigger(name);
-  }
-  function initStatusDropdown() {
-    msState.status = [...ALL_STATUSES];
-    buildDropdown('status', ALL_STATUSES, false);
-    updateTrigger('status');
-  }
+  function removeOption(name,opt){ const i=msState[name].indexOf(opt); if(i!==-1)msState[name].splice(i,1); buildDropdown(name,name==='client'?(window._clientOptions||FALLBACK_CLIENTS):ALL_STATUSES,name==='client'); updateTrigger(name); }
+  function initStatusDropdown(){ msState.status=[...ALL_STATUSES]; buildDropdown('status',ALL_STATUSES,false); updateTrigger('status'); }
 
-  // OTP Auth
-  async function sendOTP() {
-    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
-    const errEl = document.getElementById('emailError');
-    errEl.classList.remove('visible');
-    if (!email) { errEl.textContent='Please enter your email address.'; errEl.classList.add('visible'); return; }
-    const btn = document.getElementById('sendOTPBtn');
-    btn.disabled=true; btn.textContent='Sending...';
-    try {
-      const res = await fetch('/api/otp', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'send',email}) });
-      let data;
-      try { data = await res.json(); } catch { data = { error: 'Server error — please check with deven@voiro.com' }; }
-      if (!res.ok) { errEl.textContent=data.error||'Something went wrong. Please contact deven@voiro.com.'; errEl.classList.add('visible'); return; }
-      currentUser = email;
+  // OTP
+  async function sendOTP(){
+    const email=document.getElementById('loginEmail').value.trim().toLowerCase();
+    const errEl=document.getElementById('emailError'); errEl.classList.remove('visible');
+    if(!email){errEl.textContent='Please enter your email address.';errEl.classList.add('visible');return;}
+    const btn=document.getElementById('sendOTPBtn'); btn.disabled=true; btn.textContent='Sending...';
+    try{
+      const res=await fetch('/api/otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'send',email})});
+      let data; try{data=await res.json();}catch{data={error:'Server error. Please contact deven@voiro.com'};}
+      if(!res.ok){errEl.textContent=data.error||'Something went wrong.';errEl.classList.add('visible');return;}
+      currentUser=email;
       document.getElementById('stepEmail').style.display='none';
       document.getElementById('stepOTP').style.display='block';
       document.getElementById('otpSubtitle').textContent=`We sent a 6-digit code to ${email}. It expires in 10 minutes.`;
       setTimeout(()=>document.getElementById('otpInput').focus(),100);
-    } catch { errEl.textContent='Network error. Please try again.'; errEl.classList.add('visible'); }
-    finally { btn.disabled=false; btn.textContent='Send Login Code →'; }
+    }catch{errEl.textContent='Network error. Please try again.';errEl.classList.add('visible');}
+    finally{btn.disabled=false;btn.textContent='Send Login Code →';}
   }
-  async function resendOTP() {
-    document.getElementById('stepOTP').style.display='none';
-    document.getElementById('stepEmail').style.display='block';
-    document.getElementById('otpInput').value='';
-    document.getElementById('otpError').classList.remove('visible');
-  }
-  async function verifyOTP() {
-    const otp = document.getElementById('otpInput').value.trim();
-    const errEl = document.getElementById('otpError');
-    errEl.classList.remove('visible');
-    if (!otp||otp.length<6) { errEl.textContent='Please enter the 6-digit code.'; errEl.classList.add('visible'); return; }
-    const btn = document.getElementById('verifyOTPBtn');
-    btn.disabled=true; btn.textContent='Verifying...';
-    try {
-      const res = await fetch('/api/otp', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'verify',email:currentUser,otp}) });
-      let data;
-      try { data = await res.json(); } catch { data = { error: 'Server error — please contact deven@voiro.com' }; }
-      if (!res.ok) { errEl.textContent=data.error||'Verification failed.'; errEl.classList.add('visible'); return; }
+  function resendOTP(){ document.getElementById('stepOTP').style.display='none'; document.getElementById('stepEmail').style.display='block'; document.getElementById('otpInput').value=''; document.getElementById('otpError').classList.remove('visible'); }
+  async function verifyOTP(){
+    const otp=document.getElementById('otpInput').value.trim();
+    const errEl=document.getElementById('otpError'); errEl.classList.remove('visible');
+    if(!otp||otp.length<6){errEl.textContent='Please enter the 6-digit code.';errEl.classList.add('visible');return;}
+    const btn=document.getElementById('verifyOTPBtn'); btn.disabled=true; btn.textContent='Verifying...';
+    try{
+      const res=await fetch('/api/otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'verify',email:currentUser,otp})});
+      let data; try{data=await res.json();}catch{data={error:'Server error. Please contact deven@voiro.com'};}
+      if(!res.ok){errEl.textContent=data.error||'Verification failed.';errEl.classList.add('visible');return;}
       document.getElementById('loginScreen').style.display='none';
       document.getElementById('appScreen').classList.add('visible');
       document.getElementById('userEmail').textContent=currentUser;
       document.getElementById('userAvatar').textContent=currentUser[0].toUpperCase();
       document.getElementById('userPill').classList.add('visible');
-      initStatusDropdown();
-      await loadClientLabels();
-    } catch { errEl.textContent='Network error. Please try again.'; errEl.classList.add('visible'); }
-    finally { btn.disabled=false; btn.textContent='Verify →'; }
+      initStatusDropdown(); await loadClientLabels();
+    }catch{errEl.textContent='Network error. Please try again.';errEl.classList.add('visible');}
+    finally{btn.disabled=false;btn.textContent='Verify →';}
   }
 
-  async function loadClientLabels() {
-    const trigger = document.getElementById('clientTrigger');
-    try {
-      const res = await fetch('/api/labels', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:currentUser}) });
-      const data = await res.json();
-      const labels = (data.labels&&data.labels.length>0) ? data.labels : FALLBACK_CLIENTS;
-      window._clientOptions = labels;
-      msState.client = [...labels];
-      buildDropdown('client', labels, true);
-      trigger.classList.remove('disabled');
-      updateTrigger('client');
-    } catch {
-      window._clientOptions = FALLBACK_CLIENTS;
-      msState.client = [...FALLBACK_CLIENTS];
-      buildDropdown('client', FALLBACK_CLIENTS, true);
-      trigger.classList.remove('disabled');
-      updateTrigger('client');
+  async function loadClientLabels(){
+    const trigger=document.getElementById('clientTrigger');
+    try{
+      const res=await fetch('/api/labels',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:currentUser})});
+      const data=await res.json();
+      const labels=(data.labels&&data.labels.length>0)?data.labels:FALLBACK_CLIENTS;
+      window._clientOptions=labels; msState.client=[...labels];
+      buildDropdown('client',labels,true); trigger.classList.remove('disabled'); updateTrigger('client');
+    }catch{
+      window._clientOptions=FALLBACK_CLIENTS; msState.client=[...FALLBACK_CLIENTS];
+      buildDropdown('client',FALLBACK_CLIENTS,true); trigger.classList.remove('disabled'); updateTrigger('client');
     }
   }
 
-  function extractTicketId(input) {
-    const s = (input||'').trim();
-    // Try to extract from URL
-    const urlMatch = s.match(/browse\/([A-Z]+-\d+)/i) || s.match(/([A-Z]+-\d+)/i);
-    return urlMatch ? urlMatch[1].toUpperCase() : s.toUpperCase();
+  function extractTicketId(input){
+    const s=(input||'').trim();
+    const m=s.match(/browse\/([A-Z]+-\d+)/i)||s.match(/([A-Z]+-\d+)/i);
+    return m?m[1].toUpperCase():s.toUpperCase();
   }
+  function showError(msg){const el=document.getElementById('errorMsg');el.textContent=msg;el.style.display='block';}
+  function hideError(){document.getElementById('errorMsg').style.display='none';}
+  function setLoading(on){document.getElementById('generateBtn').disabled=on;document.getElementById('btnText').textContent=on?'Generating...':'Generate';document.getElementById('btnSpinner').style.display=on?'inline-block':'none';}
+  function renderSteps(steps,ai){const box=document.getElementById('stepsBox');box.classList.add('visible');box.innerHTML=steps.map((s,i)=>`<div class="step-item ${i<ai?'done':i===ai?'active':''}"><div class="step-dot"></div><span>${s}</span></div>`).join('');}
 
-  function showError(msg) { const el=document.getElementById('errorMsg'); el.textContent=msg; el.style.display='block'; }
-  function hideError() { document.getElementById('errorMsg').style.display='none'; }
-  function setLoading(on) {
-    document.getElementById('generateBtn').disabled=on;
-    document.getElementById('btnText').textContent=on?'Generating...':'Generate';
-    document.getElementById('btnSpinner').style.display=on?'inline-block':'none';
-  }
-  function renderSteps(steps, activeIndex) {
-    const box=document.getElementById('stepsBox');
-    box.classList.add('visible');
-    box.innerHTML=steps.map((s,i)=>`<div class="step-item ${i<activeIndex?'done':i===activeIndex?'active':''}"><div class="step-dot"></div><span>${s}</span></div>`).join('');
-  }
-
-  async function generate() {
-    const rawInput = document.getElementById('devopsTicket').value.trim();
-    const devopsTicket = extractTicketId(rawInput);
-    const clientFilter = msState.client;
-    const statusFilter = msState.status;
+  async function generate(){
+    const rawInput=document.getElementById('devopsTicket').value.trim();
+    const devopsTicket=extractTicketId(rawInput);
+    const clientFilter=msState.client, statusFilter=msState.status;
     hideError();
-    if (!devopsTicket||!devopsTicket.startsWith('DEVOPS')) { showError('Please enter a valid DEVOPS ticket ID or URL.'); return; }
-    if (clientFilter.length===0) { showError('Please select at least one client.'); return; }
-    if (statusFilter.length===0) { showError('Please select at least one status.'); return; }
+    if(!devopsTicket||!devopsTicket.startsWith('DEVOPS')){showError('Please enter a valid DEVOPS ticket ID or URL.');return;}
+    if(clientFilter.length===0){showError('Please select at least one client.');return;}
+    if(statusFilter.length===0){showError('Please select at least one status.');return;}
     setLoading(true);
-    closeDropdown('client'); closeDropdown('status');
+    closeDropdown('client');closeDropdown('status');
     document.getElementById('outputArea').classList.remove('visible');
     document.getElementById('outputArea').innerHTML='';
-    const progressSteps = ['Connecting to Jira...','Fetching linked tickets...','Resolving ticket hierarchy...','Filtering by client & status...','Generating release notes...'];
-    let stepIndex=0; renderSteps(progressSteps,stepIndex);
-    const stepTimer=setInterval(()=>{ stepIndex=Math.min(stepIndex+1,progressSteps.length-1); renderSteps(progressSteps,stepIndex); },1800);
-    try {
-      const res = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:currentUser,devopsTicket,clientFilter,statusFilter,allClientOptions:window._clientOptions||[]}) });
-      clearInterval(stepTimer); renderSteps(progressSteps,progressSteps.length);
-      const data = await res.json();
-      if (!res.ok) { showError(data.error||'Something went wrong.'); return; }
-      if (data.empty||!data.notes?.length) {
-        document.getElementById('outputArea').innerHTML=`<div class="empty-msg">No tickets found matching your filters on ${devopsTicket}.</div>`;
-        document.getElementById('outputArea').classList.add('visible'); return;
-      }
-      currentNotes=data.notes;
+    const progressSteps=['Connecting to Jira...','Fetching linked tickets...','Resolving ticket hierarchy...','Filtering by client & status...','Generating release notes...'];
+    let si=0; renderSteps(progressSteps,si);
+    const timer=setInterval(()=>{si=Math.min(si+1,progressSteps.length-1);renderSteps(progressSteps,si);},1800);
+    try{
+      const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:currentUser,devopsTicket,clientFilter,statusFilter,allClientOptions:window._clientOptions||[]})});
+      clearInterval(timer);renderSteps(progressSteps,progressSteps.length);
+      let data; try{data=await res.json();}catch(e){showError('Server error — please check Vercel logs or contact deven@voiro.com');return;}
+      if(!res.ok){showError(data.error||'Something went wrong.');return;}
+      if(data.empty||!data.notes?.length){document.getElementById('outputArea').innerHTML=`<div class="empty-msg">No tickets found matching your filters on ${devopsTicket}.</div>`;document.getElementById('outputArea').classList.add('visible');return;}
+      currentNotes=data.notes.filter(n=>!n.flag);
       const clientLabel=clientFilter.length===(window._clientOptions||[]).length?'All Clients':clientFilter.join(', ');
       currentMeta={client:clientLabel,devopsId:devopsTicket};
-      renderOutput(data.notes,currentMeta);
-    } catch(err) { clearInterval(stepTimer); showError('Network error: '+err.message); }
-    finally { setLoading(false); }
+      renderOutput();
+    }catch(err){clearInterval(timer);showError('Network error: '+err.message);}
+    finally{setLoading(false);}
   }
 
-  function renderOutput(notes, meta) {
-    const area=document.getElementById('outputArea');
-    area.innerHTML='';
-    const flags=notes.filter(n=>n.flag), valid=notes.filter(n=>!n.flag);
+  function renderOutput(){
+    const area=document.getElementById('outputArea'); area.innerHTML='';
     const topbar=document.createElement('div'); topbar.className='output-topbar';
+    const count=currentNotes.filter(n=>!n.flag).length;
     topbar.innerHTML=`
       <div class="output-meta">
-        <span class="chip client">${meta.client}</span>
-        <span class="chip">${meta.devopsId}</span>
-        <span class="chip">${valid.length} update${valid.length!==1?'s':''}</span>
+        <span class="chip client">${currentMeta.client}</span>
+        <span class="chip">${currentMeta.devopsId}</span>
+        <span class="chip">${count} update${count!==1?'s':''}</span>
       </div>
       <div class="output-actions">
-        <button class="btn-secondary" id="copyBtn" onclick="copyNotes()">⎘ Copy</button>
-        <button class="btn-secondary" id="copyEmailBtn" onclick="copyForEmail()">✉ Copy for Email</button>
-        <button class="btn-secondary" onclick="downloadPDF()">⬇ Download PDF</button>
+        <button class="btn-secondary" onclick="copyNotes()">⎘ Copy</button>
+        <button class="btn-secondary" onclick="copyForEmail()">✉ Copy for Email</button>
+        <button class="btn-secondary" onclick="downloadPDF()">⬇ PDF</button>
+        <button class="btn-secondary" onclick="downloadDOCX()">⬇ Word</button>
       </div>`;
     area.appendChild(topbar);
 
-    ['New Features','Improvements','Bug Fixes','Platform & Performance'].forEach(cat => {
-      const items=valid.filter(n=>n.category===cat);
-      if (!items.length) return;
+    CATEGORIES.forEach(cat=>{
+      const items=currentNotes.filter(n=>!n.flag&&n.category===cat);
+      if(!items.length) return;
       const section=document.createElement('div'); section.className='category-section';
       section.innerHTML=`<div class="category-label">${cat}</div>`;
-      items.forEach((note,i) => {
-        const card=document.createElement('div'); card.className='note-card'; card.style.animationDelay=`${i*0.05}s`;
-        const clientTag=note.client&&note.client!=='All'?`<span class="note-client-tag">${normalizeClientName(note.client)}</span>`:'';
-        const ppLink=note.ppKey?`<a href="https://voirothinktank.atlassian.net/browse/${note.ppKey}" target="_blank" class="note-pp-link">${note.ppKey} ↗</a>`:'';
-        const bullets=(note.bullets||[]).map(b=>`<li>${b}</li>`).join('');
+      items.forEach((note,localIdx)=>{
+        const globalIdx=currentNotes.indexOf(note);
+        const card=document.createElement('div'); card.className='note-card';
+        card.draggable=true;
+        card.dataset.index=globalIdx;
         card.innerHTML=`
-          <div class="note-card-meta">${clientTag}${ppLink}</div>
-          <div class="note-title">${note.title}</div>
+          <div class="note-card-meta">
+            <div class="note-card-left">
+              ${note.client&&note.client!=='All'?`<span class="note-client-tag">${normalizeClient(note.client)}</span>`:''}
+              ${note.ppKey?`<a href="https://voirothinktank.atlassian.net/browse/${note.ppKey}" target="_blank" class="note-pp-link">${note.ppKey} ↗</a>`:''}
+            </div>
+            <div class="note-card-actions">
+              <button class="card-action-btn" onclick="openEdit(${globalIdx})">✏ Edit</button>
+              <button class="card-action-btn delete" onclick="deleteNote(${globalIdx})">✕ Delete</button>
+            </div>
+          </div>
+          <div class="note-title">${note.title||''}</div>
           <div class="note-summary">${note.summary||note.description||''}</div>
-          ${bullets?`<ul class="note-bullets">${bullets}</ul>`:''}`;
+          ${(note.bullets||[]).length?`<ul class="note-bullets">${(note.bullets||[]).map(b=>`<li>${b}</li>`).join('')}</ul>`:''}`;
+        // Drag events
+        card.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',globalIdx);card.classList.add('dragging');});
+        card.addEventListener('dragend',()=>card.classList.remove('dragging'));
+        card.addEventListener('dragover',e=>{e.preventDefault();card.classList.add('drag-over');});
+        card.addEventListener('dragleave',()=>card.classList.remove('drag-over'));
+        card.addEventListener('drop',e=>{e.preventDefault();card.classList.remove('drag-over');const fromIdx=parseInt(e.dataTransfer.getData('text/plain'));const toIdx=globalIdx;if(fromIdx!==toIdx){const moved=currentNotes.splice(fromIdx,1)[0];currentNotes.splice(toIdx,0,moved);renderOutput();}});
         section.appendChild(card);
       });
+      // Add entry button per category
+      const addBtn=document.createElement('button'); addBtn.className='add-entry-btn';
+      addBtn.innerHTML=`+ Add entry to ${cat}`;
+      addBtn.onclick=()=>openNewEntry(cat);
+      section.appendChild(addBtn);
       area.appendChild(section);
     });
 
-    if (flags.length) {
-      const fs=document.createElement('div'); fs.className='category-section';
-      fs.innerHTML=`<div class="category-label" style="color:#d97706;">⚠ Needs Review</div>`;
-      flags.forEach(f=>{ const c=document.createElement('div'); c.className='flag-card'; c.innerHTML=`<div class="flag-label">Flagged — ${f.key}</div><div class="flag-reason">${f.reason}</div>`; fs.appendChild(c); });
-      area.appendChild(fs);
-    }
+    // Flags
+    const flags=currentNotes.filter(n=>n.flag);
+    if(flags.length){const fs=document.createElement('div');fs.className='category-section';fs.innerHTML=`<div class="category-label" style="color:#d97706;">⚠ Needs Review</div>`;flags.forEach(f=>{const c=document.createElement('div');c.className='flag-card';c.innerHTML=`<div class="flag-label">Flagged — ${f.key}</div><div class="flag-reason">${f.reason}</div>`;fs.appendChild(c);});area.appendChild(fs);}
+
     area.classList.add('visible');
   }
 
-  // PDF Generation
-  function downloadPDF() {
-    if (!currentNotes||!currentMeta) return;
-    const doc = new jsPDF({ unit:'pt', format:'a4' });
-    const W=595, margin=48, contentW=W-margin*2;
+  // Edit Modal
+  function openEdit(idx){
+    editingIndex=idx;
+    const note=currentNotes[idx];
+    document.getElementById('editCategory').value=note.category||'Improvements';
+    document.getElementById('editTitle').value=note.title||'';
+    document.getElementById('editSummary').value=note.summary||note.description||'';
+    renderBullets(note.bullets||[]);
+    document.getElementById('editModal').classList.add('open');
+  }
+  function openNewEntry(category){
+    editingIndex=null;
+    document.getElementById('editCategory').value=category;
+    document.getElementById('editTitle').value='';
+    document.getElementById('editSummary').value='';
+    renderBullets(['']);
+    document.getElementById('editModal').classList.add('open');
+  }
+  function renderBullets(bullets){
+    const container=document.getElementById('editBullets'); container.innerHTML='';
+    bullets.forEach((b,i)=>{
+      const row=document.createElement('div'); row.className='bullet-item';
+      row.innerHTML=`<input type="text" value="${b.replace(/"/g,'&quot;')}" placeholder="Specific change or improvement" /><button class="bullet-remove" onclick="removeBullet(${i})">×</button>`;
+      container.appendChild(row);
+    });
+  }
+  function addBullet(){ const inputs=document.querySelectorAll('#editBullets input'); const bullets=Array.from(inputs).map(i=>i.value); bullets.push(''); renderBullets(bullets); }
+  function removeBullet(idx){ const inputs=document.querySelectorAll('#editBullets input'); const bullets=Array.from(inputs).map(i=>i.value); bullets.splice(idx,1); renderBullets(bullets); }
+  function closeModal(){ document.getElementById('editModal').classList.remove('open'); editingIndex=null; }
+  function saveEdit(){
+    const category=document.getElementById('editCategory').value;
+    const title=document.getElementById('editTitle').value.trim();
+    const summary=document.getElementById('editSummary').value.trim();
+    const bullets=Array.from(document.querySelectorAll('#editBullets input')).map(i=>i.value.trim()).filter(Boolean);
+    if(!title){alert('Please enter a title.');return;}
+    const entry={category,title,summary,bullets,flag:false,client:editingIndex!==null?currentNotes[editingIndex].client:'',ppKey:editingIndex!==null?currentNotes[editingIndex].ppKey:null};
+    if(editingIndex!==null){currentNotes[editingIndex]=entry;}else{currentNotes.push(entry);}
+    closeModal(); renderOutput();
+  }
+  function deleteNote(idx){ if(confirm('Delete this entry?')){ currentNotes.splice(idx,1); renderOutput(); } }
+
+  // Plain text
+  function buildPlainText(){
+    if(!currentNotes||!currentMeta) return '';
+    let text=`Release Notes — ${currentMeta.client}\n${'─'.repeat(40)}\n\n`;
+    CATEGORIES.forEach(cat=>{
+      const items=currentNotes.filter(n=>!n.flag&&n.category===cat);
+      if(!items.length) return;
+      text+=`${cat.toUpperCase()}\n\n`;
+      items.forEach(n=>{text+=`${n.title}\n${n.summary||''}\n`;(n.bullets||[]).forEach(b=>{text+=`  • ${b}\n`;});text+='\n';});
+    });
+    return text.trim();
+  }
+  function buildEmailSummary(){
+    if(!currentNotes||!currentMeta) return '';
+    const today=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+    const counts={};
+    CATEGORIES.forEach(cat=>{const n=currentNotes.filter(x=>!x.flag&&x.category===cat).length;if(n>0)counts[cat]=n;});
+    const summary=Object.entries(counts).map(([k,v])=>`${v} ${k}`).join(', ');
+    return `Subject: Voiro Platform Release Notes — ${today}\n\nHi,\n\nPlease find attached the release notes for ${currentMeta.client}.\n\nThis release includes ${summary}. Full details are in the attached document.\n\nFor any questions, please reach out to your Voiro account manager.\n\nBest regards,\nVoiro Team`;
+  }
+  function copyNotes(){ navigator.clipboard.writeText(buildPlainText()).then(()=>{const btn=document.querySelector('.output-actions .btn-secondary');btn.textContent='✓ Copied';setTimeout(()=>{btn.innerHTML='⎘ Copy';},2000);}); }
+  function copyForEmail(){ navigator.clipboard.writeText(buildEmailSummary()).then(()=>{const btns=document.querySelectorAll('.output-actions .btn-secondary');btns[1].textContent='✓ Copied';setTimeout(()=>{btns[1].innerHTML='✉ Copy for Email';},2000);}); }
+
+  // PDF
+  function downloadPDF(){
+    if(!currentNotes||!currentMeta) return;
+    const doc=new jsPDF({unit:'pt',format:'a4'});
+    const W=595,margin=48,cW=W-margin*2;
     let y=margin;
-    const colors = { purple:[79,70,229], dark:[26,26,46], mid:[82,82,110], light:[142,142,160], border:[229,229,234], bg:[245,245,247], teal:[59,182,187], red:[206,84,80] };
-
-    // Header bar
-    doc.setFillColor(...colors.dark); doc.rect(0,0,W,56,'F');
-
-    // Voiro logo (simplified geometric)
-    doc.setFillColor(...colors.teal); doc.circle(28,28,10,'F');
-    doc.setFillColor(...colors.red); doc.circle(38,28,6,'F');
-
-    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(16);
-    doc.text('Voiro Release Notes',52,34);
-    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(200,200,210);
-    doc.text(`${currentMeta.devopsId}  ·  Generated ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}`, 52, 46);
-
-    y = 80;
-
-    // Client chip
-    doc.setFillColor(...colors.purple); doc.roundedRect(margin,y,contentW,32,6,6,'F');
-    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(12);
-    doc.text(currentMeta.client, margin+16, y+21);
-    y += 52;
-
-    const valid = currentNotes.filter(n=>!n.flag);
-    const categories = ['New Features','Improvements','Bug Fixes','Platform & Performance'];
-
-    categories.forEach(cat => {
-      const items = valid.filter(n=>n.category===cat);
-      if (!items.length) return;
-
-      // Category header
-      if (y > 750) { doc.addPage(); y=margin; }
-      doc.setFillColor(...colors.bg); doc.roundedRect(margin,y,contentW,24,4,4,'F');
-      doc.setTextColor(...colors.light); doc.setFont('helvetica','bold'); doc.setFontSize(9);
-      doc.text(cat.toUpperCase(), margin+12, y+16);
-      y += 36;
-
-      items.forEach(note => {
-        // Estimate height needed
-        const titleLines = doc.splitTextToSize(note.title||'', contentW-24);
-        const summaryLines = doc.splitTextToSize(note.summary||note.description||'', contentW-24);
-        const bulletLines = (note.bullets||[]).map(b=>doc.splitTextToSize(`→  ${b}`, contentW-36));
-        const bulletTotal = bulletLines.reduce((a,b)=>a+b.length,0);
-        const estH = 20 + titleLines.length*20 + 8 + summaryLines.length*16 + (bulletTotal>0?8+bulletTotal*15:0) + 20;
-
-        if (y+estH > 800) { doc.addPage(); y=margin; }
-
-        // Card background
-        doc.setFillColor(255,255,255); doc.setDrawColor(...colors.border); doc.setLineWidth(0.5);
-        doc.roundedRect(margin,y,contentW,estH,6,6,'FD');
-
-        let cardY=y+16;
-
-        // Client tag
-        if (note.client&&note.client!=='All') {
-          const tag=normalizeClientName(note.client);
-          const tagW=doc.getTextWidth(tag)+16;
-          doc.setFillColor(238,242,255); doc.roundedRect(margin+12,cardY-10,tagW,16,3,3,'F');
-          doc.setTextColor(...colors.purple); doc.setFont('helvetica','bold'); doc.setFontSize(8);
-          doc.text(tag.toUpperCase(),margin+20,cardY);
-          cardY+=14;
-        }
-
-        // Title
-        doc.setTextColor(...colors.dark); doc.setFont('helvetica','bold'); doc.setFontSize(12);
-        doc.text(titleLines, margin+12, cardY);
-        cardY+=titleLines.length*20+8;
-
-        // Summary
-        doc.setTextColor(...colors.mid); doc.setFont('helvetica','normal'); doc.setFontSize(10);
-        doc.text(summaryLines, margin+12, cardY);
-        cardY+=summaryLines.length*16;
-
-        // Bullets
-        if ((note.bullets||[]).length>0) {
-          cardY+=8;
-          note.bullets.forEach(b => {
-            const bLines=doc.splitTextToSize(`→  ${b}`,contentW-36);
-            doc.setTextColor(...colors.purple); doc.setFont('helvetica','bold'); doc.setFontSize(9);
-            doc.text('→',margin+12,cardY);
-            doc.setTextColor(...colors.mid); doc.setFont('helvetica','normal');
-            doc.text(doc.splitTextToSize(b,contentW-48),margin+24,cardY);
-            cardY+=bLines.length*15;
-          });
-        }
-
+    const C={purple:[79,70,229],dark:[26,26,46],mid:[82,82,110],light:[142,142,160],border:[229,229,234],bg:[245,245,247],teal:[59,182,187],red:[206,84,80]};
+    doc.setFillColor(...C.dark);doc.rect(0,0,W,56,'F');
+    doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(16);doc.text('Voiro Release Notes',48,34);
+    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(200,200,210);
+    doc.text(`${currentMeta.devopsId}  ·  ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}`,48,46);
+    y=80;
+    doc.setFillColor(...C.purple);doc.roundedRect(margin,y,cW,32,6,6,'F');
+    doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(currentMeta.client,margin+16,y+21);
+    y+=52;
+    CATEGORIES.forEach(cat=>{
+      const items=currentNotes.filter(n=>!n.flag&&n.category===cat);
+      if(!items.length) return;
+      if(y>750){doc.addPage();y=margin;}
+      doc.setFillColor(...C.bg);doc.roundedRect(margin,y,cW,24,4,4,'F');
+      doc.setTextColor(...C.light);doc.setFont('helvetica','bold');doc.setFontSize(9);doc.text(cat.toUpperCase(),margin+12,y+16);
+      y+=36;
+      items.forEach(note=>{
+        const tLines=doc.splitTextToSize(note.title||'',cW-24);
+        const sLines=doc.splitTextToSize(note.summary||note.description||'',cW-24);
+        const bLines=(note.bullets||[]).map(b=>doc.splitTextToSize(b,cW-48));
+        const bTotal=bLines.reduce((a,b)=>a+b.length,0);
+        const estH=20+tLines.length*20+8+sLines.length*16+(bTotal>0?8+bTotal*15:0)+20;
+        if(y+estH>800){doc.addPage();y=margin;}
+        doc.setFillColor(255,255,255);doc.setDrawColor(...C.border);doc.setLineWidth(0.5);doc.roundedRect(margin,y,cW,estH,6,6,'FD');
+        let cy=y+16;
+        if(note.client&&note.client!=='All'){const tag=normalizeClient(note.client);const tw=doc.getTextWidth(tag)+16;doc.setFillColor(238,242,255);doc.roundedRect(margin+12,cy-10,tw,16,3,3,'F');doc.setTextColor(...C.purple);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text(tag.toUpperCase(),margin+20,cy);cy+=14;}
+        doc.setTextColor(...C.dark);doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text(tLines,margin+12,cy);cy+=tLines.length*20+8;
+        doc.setTextColor(...C.mid);doc.setFont('helvetica','normal');doc.setFontSize(10);doc.text(sLines,margin+12,cy);cy+=sLines.length*16;
+        if((note.bullets||[]).length>0){cy+=8;note.bullets.forEach((b,bi)=>{const bl=doc.splitTextToSize(b,cW-48);doc.setTextColor(...C.purple);doc.setFont('helvetica','bold');doc.setFontSize(9);doc.text('→',margin+12,cy);doc.setTextColor(...C.mid);doc.setFont('helvetica','normal');doc.text(bl,margin+24,cy);cy+=bl.length*15;});}
         y+=estH+12;
       });
       y+=8;
     });
-
-    // Footer
-    const pageCount=doc.internal.getNumberOfPages();
-    for(let i=1;i<=pageCount;i++){
-      doc.setPage(i);
-      doc.setDrawColor(...colors.border); doc.setLineWidth(0.5); doc.line(margin,820,W-margin,820);
-      doc.setTextColor(...colors.light); doc.setFont('helvetica','normal'); doc.setFontSize(8);
-      doc.text('Confidential — Voiro Technologies',margin,832);
-      doc.text(`Page ${i} of ${pageCount}`,W-margin,832,{align:'right'});
-    }
-
+    const pc=doc.internal.getNumberOfPages();
+    for(let i=1;i<=pc;i++){doc.setPage(i);doc.setDrawColor(...C.border);doc.setLineWidth(0.5);doc.line(margin,820,W-margin,820);doc.setTextColor(...C.light);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text('Confidential — Voiro Technologies',margin,832);doc.text(`Page ${i} of ${pc}`,W-margin,832,{align:'right'});}
     doc.save(`Voiro_Release_Notes_${currentMeta.devopsId}_${new Date().toISOString().split('T')[0]}.pdf`);
   }
 
-  function buildPlainText() {
-    if (!currentNotes||!currentMeta) return '';
-    const valid=currentNotes.filter(n=>!n.flag);
-    let text=`Release Notes — ${currentMeta.client}\n${'─'.repeat(40)}\n\n`;
-    ['New Features','Improvements','Bug Fixes','Platform & Performance'].forEach(cat=>{
-      const items=valid.filter(n=>n.category===cat);
-      if (!items.length) return;
-      text+=`${cat.toUpperCase()}\n\n`;
-      items.forEach(n=>{
-        text+=`${n.title}\n${n.summary||n.description||''}\n`;
-        if ((n.bullets||[]).length>0) n.bullets.forEach(b=>{ text+=`  • ${b}\n`; });
-        text+='\n';
+  // DOCX
+  function downloadDOCX(){
+    if(!currentNotes||!currentMeta) return;
+    const today=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+    let html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+      body{font-family:Calibri,sans-serif;margin:40px;color:#1a1a2e;}
+      h1{font-size:22px;color:#4f46e5;margin-bottom:4px;}
+      .meta{font-size:12px;color:#8e8ea0;margin-bottom:24px;}
+      h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:#8e8ea0;border-bottom:1px solid #e5e5ea;padding-bottom:6px;margin:24px 0 12px;}
+      .card{border:1px solid #e5e5ea;border-radius:8px;padding:16px;margin-bottom:12px;}
+      .client-tag{font-size:10px;font-weight:bold;text-transform:uppercase;color:#4f46e5;background:#eef2ff;border:1px solid #c7d2fe;border-radius:3px;padding:2px 6px;display:inline-block;margin-bottom:8px;}
+      .note-title{font-size:14px;font-weight:bold;color:#1a1a2e;margin-bottom:6px;}
+      .note-summary{font-size:13px;color:#52526e;line-height:1.6;margin-bottom:10px;}
+      ul{margin:0;padding-left:20px;}
+      li{font-size:13px;color:#52526e;line-height:1.8;}
+      .footer{margin-top:40px;font-size:11px;color:#8e8ea0;border-top:1px solid #e5e5ea;padding-top:12px;}
+    </style></head><body>
+    <h1>Voiro Release Notes — ${currentMeta.client}</h1>
+    <div class="meta">${currentMeta.devopsId} · ${today}</div>`;
+    CATEGORIES.forEach(cat=>{
+      const items=currentNotes.filter(n=>!n.flag&&n.category===cat);
+      if(!items.length) return;
+      html+=`<h2>${cat}</h2>`;
+      items.forEach(note=>{
+        html+=`<div class="card">`;
+        if(note.client&&note.client!=='All') html+=`<div class="client-tag">${normalizeClient(note.client)}</div>`;
+        html+=`<div class="note-title">${note.title||''}</div>`;
+        html+=`<div class="note-summary">${note.summary||note.description||''}</div>`;
+        if((note.bullets||[]).length>0) html+=`<ul>${note.bullets.map(b=>`<li>${b}</li>`).join('')}</ul>`;
+        html+=`</div>`;
       });
     });
-    return text.trim();
-  }
-
-  function buildEmailSummary() {
-    if (!currentNotes||!currentMeta) return '';
-    const valid=currentNotes.filter(n=>!n.flag);
-    const today=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-    const counts={};
-    ['New Features','Improvements','Bug Fixes','Platform & Performance'].forEach(cat=>{
-      const n=valid.filter(x=>x.category===cat).length;
-      if (n>0) counts[cat]=n;
-    });
-    const summary=Object.entries(counts).map(([k,v])=>`${v} ${k}`).join(', ');
-    return `Subject: Voiro Platform Release Notes — ${today}\n\nHi,\n\nPlease find attached the latest release notes for ${currentMeta.client}.\n\nThis release includes ${summary}. Please refer to the attached PDF for the full details of each update.\n\nFor any questions, please reach out to your Voiro account manager.\n\nBest regards,\nVoiro Team`;
-  }
-
-  function copyNotes() {
-    navigator.clipboard.writeText(buildPlainText()).then(()=>{
-      const btn=document.getElementById('copyBtn'); btn.textContent='✓ Copied';
-      setTimeout(()=>{ btn.innerHTML='⎘ Copy'; },2000);
-    });
-  }
-  function copyForEmail() {
-    navigator.clipboard.writeText(buildEmailSummary()).then(()=>{
-      const btn=document.getElementById('copyEmailBtn'); btn.textContent='✓ Copied';
-      setTimeout(()=>{ btn.innerHTML='✉ Copy for Email'; },2000);
-    });
+    html+=`<div class="footer">Confidential — Voiro Technologies</div></body></html>`;
+    const blob=new Blob([html],{type:'application/msword'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=`Voiro_Release_Notes_${currentMeta.devopsId}_${new Date().toISOString().split('T')[0]}.doc`;
+    a.click(); URL.revokeObjectURL(url);
   }
 </script>
 </body>
