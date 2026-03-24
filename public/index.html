@@ -24,7 +24,7 @@
   .app-screen.visible { display: flex; flex-direction: column; }
   .form-card { background: #fff; border: 1px solid #e5e5ea; border-radius: 12px; padding: 24px; }
   .form-card-title { font-size: 13px; font-weight: 600; color: #8e8ea0; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 20px; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; align-items: end; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: end; }
   .field { display: flex; flex-direction: column; gap: 6px; }
   .field label { font-size: 13px; font-weight: 500; color: #3a3a52; }
   .field input, .field select { font-family: 'Inter', sans-serif; font-size: 14px; background: #fff; border: 1px solid #d1d1db; border-radius: 8px; color: #1a1a2e; padding: 9px 12px; outline: none; transition: border-color 0.15s, box-shadow 0.15s; width: 100%; }
@@ -108,10 +108,7 @@
         </select>
         <span class="select-hint" id="selectHint"><span class="spinner-sm"></span>Fetching from Jira...</span>
       </div>
-      <div class="field">
-        <label>Release Date</label>
-        <input type="date" id="releaseDate" />
-      </div>
+
     </div>
     <div style="margin-top:16px;display:flex;gap:10px;align-items:center;">
       <button class="btn-primary" id="generateBtn" onclick="generate()">
@@ -127,8 +124,6 @@
 </div>
 
 <script>
-  document.getElementById('releaseDate').value = new Date().toISOString().split('T')[0];
-
   let currentUser = null, currentNotes = null, currentMeta = null;
   const ALLOWED = ['abash@voiro.com', 'kavya@voiro.com', 'deven@voiro.com'];
   const FALLBACK_CLIENTS = ['Carrefour', 'DSTV', 'Flipkart', 'Myntra', 'Paytm', 'SonyLiv'];
@@ -199,9 +194,8 @@
   async function generate() {
     const devopsTicket = document.getElementById('devopsTicket').value.trim().toUpperCase();
     const clientFilter = document.getElementById('clientFilter').value;
-    const releaseDate = document.getElementById('releaseDate').value;
     hideError();
-    if (!devopsTicket || !clientFilter || !releaseDate) { showError('Please fill in all fields.'); return; }
+    if (!devopsTicket || !clientFilter) { showError('Please fill in all fields.'); return; }
     setLoading(true);
     document.getElementById('outputArea').classList.remove('visible');
     document.getElementById('outputArea').innerHTML = '';
@@ -213,7 +207,7 @@
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: currentUser, devopsTicket, clientFilter, releaseDate })
+        body: JSON.stringify({ email: currentUser, devopsTicket, clientFilter })
       });
       clearInterval(stepTimer);
       renderSteps(progressSteps, progressSteps.length);
@@ -225,7 +219,7 @@
         return;
       }
       currentNotes = data.notes;
-      currentMeta = { client: clientFilter === 'all' ? 'All Clients' : clientFilter, date: releaseDate, devopsId: devopsTicket };
+      currentMeta = { client: clientFilter === 'all' ? 'All Clients' : clientFilter, devopsId: devopsTicket };
       renderOutput(data.notes, currentMeta);
     } catch (err) {
       clearInterval(stepTimer);
@@ -238,7 +232,6 @@
   function renderOutput(notes, meta) {
     const area = document.getElementById('outputArea');
     area.innerHTML = '';
-    const formattedDate = new Date(meta.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
     const flags = notes.filter(n => n.flag);
     const valid = notes.filter(n => !n.flag);
     const topbar = document.createElement('div');
@@ -246,13 +239,12 @@
     topbar.innerHTML = `
       <div class="output-meta">
         <span class="chip client">${meta.client}</span>
-        <span class="chip date">${formattedDate}</span>
         <span class="chip">${meta.devopsId}</span>
         <span class="chip">${valid.length} update${valid.length !== 1 ? 's' : ''}</span>
       </div>
       <div class="output-actions">
-        <button class="btn-secondary" onclick="copyNotes()">⎘ Copy</button>
-        <button class="btn-secondary" onclick="emailDraft()">✉ Draft Email</button>
+        <button class="btn-secondary" id="copyBtn" onclick="copyNotes()">⎘ Copy</button>
+        <button class="btn-secondary" id="copyEmailBtn" onclick="copyForEmail()">✉ Copy for Email</button>
       </div>`;
     area.appendChild(topbar);
     ['New Features','Improvements','Bug Fixes','Platform & Performance'].forEach(cat => {
@@ -286,9 +278,8 @@
 
   function buildPlainText() {
     if (!currentNotes || !currentMeta) return '';
-    const formattedDate = new Date(currentMeta.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
     const valid = currentNotes.filter(n => !n.flag);
-    let text = `Release Notes — ${currentMeta.client}\n${formattedDate}\n${'─'.repeat(40)}\n\n`;
+    let text = `Release Notes — ${currentMeta.client}\n${'─'.repeat(40)}\n\n`;
     ['New Features','Improvements','Bug Fixes','Platform & Performance'].forEach(cat => {
       const items = valid.filter(n => n.category === cat);
       if (!items.length) return;
@@ -300,16 +291,22 @@
 
   function copyNotes() {
     navigator.clipboard.writeText(buildPlainText()).then(() => {
-      const btn = document.querySelector('.output-actions .btn-secondary');
+      const btn = document.getElementById('copyBtn');
       btn.textContent = '✓ Copied';
       setTimeout(() => { btn.innerHTML = '⎘ Copy'; }, 2000);
     });
   }
 
-  function emailDraft() {
-    const formattedDate = new Date(currentMeta.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-    const subject = encodeURIComponent(`Voiro Platform Release Notes — ${formattedDate}`);
-    window.open(`mailto:?subject=${subject}&body=${encodeURIComponent(buildPlainText())}`);
+  function copyForEmail() {
+    const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    const subject = `Voiro Platform Release Notes — ${today}`;
+    const body = buildPlainText();
+    const emailText = `Subject: ${subject}\n\n${body}`;
+    navigator.clipboard.writeText(emailText).then(() => {
+      const btn = document.getElementById('copyEmailBtn');
+      btn.textContent = '✓ Copied';
+      setTimeout(() => { btn.innerHTML = '✉ Copy for Email'; }, 2000);
+    });
   }
 </script>
 </body>
