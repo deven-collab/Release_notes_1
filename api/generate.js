@@ -85,23 +85,28 @@ function matchesClient(clientCategory, clientFilter, allClientOptions) {
 
 async function callClaude(tickets, clientName) {
   const ticketList = tickets.map(t =>
-    `Ticket: ${t.key}\nTitle: ${t.summary}\nDescription: ${t.description || 'No description provided.'}\nEngineering-only: ${t.engineeringOnly ? 'Yes' : 'No'}`
+    `Ticket: ${t.key}\nTitle: ${t.summary}\nClient: ${t.clientCategory || 'All'}\nDescription: ${t.description || 'No description provided.'}\nEngineering-only: ${t.engineeringOnly ? 'Yes' : 'No'}`
   ).join('\n\n---\n\n');
+
+  const ticketCount = tickets.length;
 
   const clientLabel = Array.isArray(clientName) ? clientName.join(', ') : clientName;
 
   const prompt = `Generate release notes for ${clientLabel}.
 
+There are ${ticketCount} tickets below. Your output array MUST contain exactly ${ticketCount} items — one per ticket, no exceptions.
+
 Here are the tickets:
 
 ${ticketList}
 
-Return ONLY a JSON array. No preamble, no markdown fences. Each item must be:
+Return ONLY a JSON array of exactly ${ticketCount} items. No preamble, no markdown fences. Each item must be:
 {
   "key": "...",
   "category": "New Features" | "Improvements" | "Bug Fixes" | "Platform & Performance",
   "title": "...",
   "description": "...",
+  "client": "...",
   "flag": false
 }
 Or if a ticket is too vague:
@@ -109,7 +114,8 @@ Or if a ticket is too vague:
   "key": "...",
   "flag": true,
   "reason": "..."
-}`;
+}
+The "client" field should be the client name from the ticket data above.`;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -120,7 +126,7 @@ Or if a ticket is too vague:
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 1500,
+      max_tokens: 4000,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: prompt }]
     })
