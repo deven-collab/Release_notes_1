@@ -26,15 +26,24 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Fetch all labels used in the PP project
-    const url = `${JIRA_BASE_URL}/rest/api/3/label?maxResults=200`;
-    const res2 = await fetch(url, { headers: jiraHeaders() });
-    const data = await res2.json();
+    // Fetch all contexts for customfield_10627 (Customer/Product Category)
+    const contextUrl = `${JIRA_BASE_URL}/rest/api/3/field/customfield_10627/context?maxResults=10`;
+    const contextRes = await fetch(contextUrl, { headers: jiraHeaders() });
+    const contextData = await contextRes.json();
 
-    // Filter to only client-looking labels — exclude generic ones
-    const excluded = ['product', 'bug', 'enhancement', 'tech-debt', 'internal'];
-    const labels = (data.values || [])
-      .filter(l => !excluded.includes(l.toLowerCase()))
+    const contextId = contextData.values?.[0]?.id;
+    if (!contextId) {
+      return res.status(200).json({ labels: [] });
+    }
+
+    // Fetch options for this context
+    const optionsUrl = `${JIRA_BASE_URL}/rest/api/3/field/customfield_10627/context/${contextId}/option?maxResults=100`;
+    const optionsRes = await fetch(optionsUrl, { headers: jiraHeaders() });
+    const optionsData = await optionsRes.json();
+
+    const labels = (optionsData.values || [])
+      .map(opt => opt.value)
+      .filter(Boolean)
       .sort();
 
     return res.status(200).json({ labels });
