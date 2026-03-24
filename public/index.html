@@ -296,8 +296,7 @@
 
   // Init status dropdown with defaults pre-selected
   function initStatusDropdown() {
-    const defaults = ['Testing Completed', 'REVIEWED', 'Done'];
-    msState.status = [...defaults];
+    msState.status = [...ALL_STATUSES];
     buildDropdown('status', ALL_STATUSES, false);
     updateTrigger('status');
   }
@@ -329,15 +328,15 @@
       const data = await res.json();
       const labels = (data.labels && data.labels.length > 0) ? data.labels : FALLBACK_CLIENTS;
       window._clientOptions = labels;
+      msState.client = [...labels];
       buildDropdown('client', labels, true);
       trigger.classList.remove('disabled');
-      document.getElementById('clientPlaceholder').textContent = 'Select clients...';
       updateTrigger('client');
     } catch {
       window._clientOptions = FALLBACK_CLIENTS;
+      msState.client = [...FALLBACK_CLIENTS];
       buildDropdown('client', FALLBACK_CLIENTS, true);
       trigger.classList.remove('disabled');
-      document.getElementById('clientPlaceholder').textContent = 'Select clients...';
       updateTrigger('client');
     }
   }
