@@ -172,8 +172,18 @@
 
   /* Summary card */
   .summary-card { background: #f0fdfc; border: 1px solid #99e6ea; border-radius: 14px; padding: 20px 24px; }
-  .summary-card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #0f766e; margin-bottom: 8px; }
+  .summary-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .summary-card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #0f766e; }
   .summary-card-text { font-size: 14px; line-height: 1.7; color: #134e4a; }
+  .summary-edit-area { width: 100%; font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.7; color: #134e4a; background: #fff; border: 1px solid #99e6ea; border-radius: 8px; padding: 10px 12px; outline: none; resize: vertical; min-height: 70px; display: none; }
+  .summary-edit-area:focus { border-color: #37b6bb; box-shadow: 0 0 0 3px rgba(55,182,187,0.12); }
+  .summary-edit-btn { font-size: 12px; color: #0f766e; background: none; border: 1px solid #99e6ea; border-radius: 6px; padding: 3px 10px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+  .summary-edit-btn:hover { background: #37b6bb; color: #fff; border-color: #37b6bb; }
+  /* Beta badge */
+  .beta-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #7c3aed; background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 4px; padding: 2px 7px; margin-left: 6px; }
+  .beta-toggle-btn { font-size: 11px; background: none; border: 1px solid #e5e7eb; border-radius: 5px; padding: 3px 8px; cursor: pointer; color: #9ca3af; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+  .beta-toggle-btn:hover { border-color: #7c3aed; color: #7c3aed; background: #f5f3ff; }
+  .beta-toggle-btn.active { background: #f5f3ff; border-color: #ddd6fe; color: #7c3aed; font-weight: 600; }
 
   @keyframes spin { to { transform: rotate(360deg); } }
   .spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
@@ -514,14 +524,41 @@
     finally{setLoading(false);}
   }
 
+  function toggleSummaryEdit(){
+    const btn=document.getElementById('summaryEditBtn');
+    const text=document.getElementById('summaryText');
+    const area=document.getElementById('summaryEditArea');
+    if(area.style.display==='block'){
+      // Save
+      currentMeta.summary=area.value.trim();
+      text.textContent=currentMeta.summary||'No summary generated.';
+      text.style.display='block'; area.style.display='none';
+      btn.textContent='✏ Edit';
+    } else {
+      // Edit
+      area.value=currentMeta.summary||'';
+      text.style.display='none'; area.style.display='block';
+      area.focus(); btn.textContent='✓ Save';
+    }
+  }
+
+  function toggleBeta(idx){
+    currentNotes[idx].beta = !currentNotes[idx].beta;
+    renderOutput();
+  }
+
   function renderOutput(){
     const area=document.getElementById('outputArea'); area.innerHTML='';
-    // Summary card
-    if(currentMeta.summary){
-      const sc=document.createElement('div'); sc.className='summary-card';
-      sc.innerHTML=`<div class="summary-card-label">Release Summary</div><div class="summary-card-text">${currentMeta.summary}</div>`;
-      area.appendChild(sc);
-    }
+    // Summary card — always show, editable
+    const sc=document.createElement('div'); sc.className='summary-card';
+    sc.innerHTML=`
+      <div class="summary-card-header">
+        <div class="summary-card-label">Release Summary</div>
+        <button class="summary-edit-btn" id="summaryEditBtn" onclick="toggleSummaryEdit()">✏ Edit</button>
+      </div>
+      <div class="summary-card-text" id="summaryText">${currentMeta.summary||'No summary generated.'}</div>
+      <textarea class="summary-edit-area" id="summaryEditArea" placeholder="Write a brief summary of this release...">${currentMeta.summary||''}</textarea>`;
+    area.appendChild(sc);
     const topbar=document.createElement('div'); topbar.className='output-topbar';
     const count=currentNotes.filter(n=>!n.flag).length;
     topbar.innerHTML=`
@@ -559,11 +596,12 @@
               ${note.ppKey?`<a href="https://voirothinktank.atlassian.net/browse/${note.ppKey}" target="_blank" class="note-pp-link">${note.ppKey} ↗</a>`:''}
             </div>
             <div class="note-card-actions">
+              <button class="beta-toggle-btn ${note.beta?'active':''}" onclick="toggleBeta(${globalIdx})">${note.beta?'β Beta':'+ Beta'}</button>
               <button class="card-action-btn" onclick="openEdit(${globalIdx})">✏ Edit</button>
               <button class="card-action-btn delete" onclick="deleteNote(${globalIdx})">✕ Delete</button>
             </div>
           </div>
-          <div class="note-title">${note.title||''}</div>
+          <div class="note-title">${note.title||''}${note.beta?'<span class="beta-badge">β Beta</span>':''}</div>
           <div class="note-summary">${note.summary||note.description||''}</div>
           ${(note.bullets||[]).length?`<ul class="note-bullets">${(note.bullets||[]).map(b=>`<li>${b}</li>`).join('')}</ul>`:''}`;
         // Drag events
@@ -624,7 +662,7 @@
     const summary=document.getElementById('editSummary').value.trim();
     const bullets=Array.from(document.querySelectorAll('#editBullets input')).map(i=>i.value.trim()).filter(Boolean);
     if(!title){alert('Please enter a title.');return;}
-    const entry={category,title,summary,bullets,flag:false,client:editingIndex!==null?currentNotes[editingIndex].client:'',ppKey:editingIndex!==null?currentNotes[editingIndex].ppKey:null};
+    const entry={category,title,summary,bullets,flag:false,beta:editingIndex!==null?(currentNotes[editingIndex].beta||false):false,client:editingIndex!==null?currentNotes[editingIndex].client:'',ppKey:editingIndex!==null?currentNotes[editingIndex].ppKey:null};
     if(editingIndex!==null){currentNotes[editingIndex]=entry;}else{currentNotes.push(entry);}
     closeModal(); renderOutput();
   }
@@ -638,7 +676,7 @@
       const items=currentNotes.filter(n=>!n.flag&&n.category===cat);
       if(!items.length) return;
       text+=`${cat.toUpperCase()}\n\n`;
-      items.forEach(n=>{text+=`${n.title}\n${n.summary||''}\n`;(n.bullets||[]).forEach(b=>{text+=`  • ${b}\n`;});text+='\n';});
+      items.forEach(n=>{text+=`${n.title}${n.beta?' [BETA]':''}\n${n.summary||''}\n`;(n.bullets||[]).forEach(b=>{text+=`  • ${b}\n`;});text+='\n';});
     });
     return text.trim();
   }
@@ -786,10 +824,11 @@
         const bulletLineCount = bulletData.reduce((a,b)=>a+b.length,0);
 
         const clientH = (clientTxt && !hideClient) ? 20 : 0;
+        const betaH = note.beta ? 16 : 0;
         const titleH = titleLines.length * 16;
         const sumH = sumLines.length * 14 + 10;
         const bullH = bulletLineCount > 0 ? bulletLineCount * 13 + 16 : 0;
-        const cardH = 16 + clientH + titleH + sumH + bullH + 16;
+        const cardH = 16 + clientH + betaH + titleH + sumH + bullH + 16;
 
         y = checkPage(y, cardH);
 
@@ -821,6 +860,17 @@
         doc.setTextColor(...badgeFg);
         doc.text(badgeTxt, ML+CW-bw-2, y+17);
 
+        // Beta badge in PDF
+        if(note.beta){
+          doc.setFont('helvetica','bold'); doc.setFontSize(7);
+          const betaTxt='β BETA';
+          const betaW=doc.getTextWidth(betaTxt)+12;
+          doc.setFillColor(245,243,255); doc.setDrawColor(196,181,253); doc.setLineWidth(0.3);
+          doc.roundedRect(ML+15, cy-10, betaW, 13, 3, 3, 'FD');
+          doc.setTextColor(124,58,237);
+          doc.text(betaTxt, ML+21, cy-1);
+          cy += 16;
+        }
         // Title
         doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...DARK);
         doc.text(titleLines, ML+15, cy);
@@ -931,7 +981,7 @@
         html+=`<div class="entry">`;
         html+=`<span class="badge badge-${badgeClass}">${cat}</span>`;
         if(note.client&&note.client!=='All') html+=`<span class="client-tag">${normalizeClient(note.client)}</span>`;
-        html+=`<h3>${note.title||''}</h3>`;
+        html+=`<h3>${note.title||''}${note.beta?' <span style="font-size:10px;font-weight:bold;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:3px;padding:1px 6px;">β BETA</span>':''}</h3>`;
         html+=`<p>${note.summary||note.description||''}</p>`;
         if((note.bullets||[]).length>0) html+=`<ul>${note.bullets.map(b=>`<li>${b}</li>`).join('')}</ul>`;
         html+=`</div>`;
