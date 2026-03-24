@@ -71,10 +71,15 @@ function matchesStatus(ticketStatus, statusFilter) {
   return statusFilter.map(s => s.toLowerCase()).includes((ticketStatus || '').toLowerCase());
 }
 
-function matchesClient(clientCategory, clientFilter) {
+function matchesClient(clientCategory, clientFilter, allClientOptions) {
+  // No filter or all clients selected — include everything
   if (!clientFilter || clientFilter.length === 0) return true;
+  if (allClientOptions && clientFilter.length >= allClientOptions.length) return true;
   const val = (clientCategory || '').toLowerCase();
+  // "Product" label means applies to all clients
   if (val === 'product') return true;
+  // Empty category on engineering tickets — include when all clients selected (already handled above)
+  // otherwise include if explicitly selected
   return clientFilter.map(c => c.toLowerCase()).includes(val);
 }
 
@@ -134,7 +139,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { email, devopsTicket, clientFilter, statusFilter } = req.body || {};
+  const { email, devopsTicket, clientFilter, statusFilter, allClientOptions } = req.body || {};
 
   if (!email || !ALLOWED_EMAILS.includes(email.toLowerCase())) {
     return res.status(403).json({ error: 'Access denied. Your email is not authorised.' });
@@ -202,7 +207,7 @@ export default async function handler(req, res) {
     }
 
     // Step 3: Filter by client
-    const filtered = Object.values(ppMap).filter(t => matchesClient(t.clientCategory, clientFilter));
+    const filtered = Object.values(ppMap).filter(t => matchesClient(t.clientCategory, clientFilter, allClientOptions));
     steps.push(`${filtered.length} tickets match filters`);
 
     if (filtered.length === 0) {
