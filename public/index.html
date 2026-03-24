@@ -13,8 +13,10 @@
   .header { background: #fff; border-bottom: 1px solid #e5e5ea; padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
   .logo { display: flex; align-items: center; gap: 10px; }
   .logo-text { font-size: 15px; font-weight: 600; color: #1a1a2e; }
-  .user-pill { display: none; align-items: center; gap: 6px; background: #f5f5f7; border: 1px solid #e5e5ea; border-radius: 20px; padding: 4px 12px 4px 8px; font-size: 12px; color: #4f46e5; font-weight: 500; }
+  .user-pill { display: none; align-items: center; gap: 6px; background: #f5f5f7; border: 1px solid #e5e5ea; border-radius: 20px; padding: 4px 4px 4px 8px; font-size: 12px; color: #4f46e5; font-weight: 500; }
   .user-pill.visible { display: flex; }
+  .logout-btn { background: none; border: none; font-size: 11px; color: #8e8ea0; cursor: pointer; padding: 3px 8px; border-radius: 12px; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+  .logout-btn:hover { background: #e5e5ea; color: #1a1a2e; }
   .user-avatar { width: 20px; height: 20px; background: #4f46e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 600; }
 
   /* Login */
@@ -155,6 +157,7 @@
   <div class="user-pill" id="userPill">
     <div class="user-avatar" id="userAvatar"></div>
     <span id="userEmail"></span>
+    <button class="logout-btn" onclick="logout()">Sign out</button>
   </div>
 </div>
 
@@ -268,6 +271,58 @@
   const { jsPDF } = window.jspdf;
   let currentUser = null, currentNotes = null, currentMeta = null, editingIndex = null;
 
+  const SESSION_KEY = 'voiro_rn_session';
+  const SESSION_TTL = 48 * 60 * 60 * 1000; // 48 hours
+
+  function saveSession(email) {
+    const session = { email, expires: Date.now() + SESSION_TTL };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  }
+
+  function loadSession() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      const session = JSON.parse(raw);
+      if (Date.now() > session.expires) { localStorage.removeItem(SESSION_KEY); return null; }
+      return session.email;
+    } catch { return null; }
+  }
+
+  function clearSession() {
+    localStorage.removeItem(SESSION_KEY);
+  }
+
+  function logout() {
+    clearSession();
+    currentUser = null; currentNotes = null; currentMeta = null;
+    document.getElementById('appScreen').classList.remove('visible');
+    document.getElementById('loginScreen').style.display = '';
+    document.getElementById('stepEmail').style.display = 'block';
+    document.getElementById('stepOTP').style.display = 'none';
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('otpInput').value = '';
+    document.getElementById('userPill').classList.remove('visible');
+    document.getElementById('outputArea').innerHTML = '';
+    document.getElementById('outputArea').classList.remove('visible');
+    document.getElementById('stepsBox').classList.remove('visible');
+  }
+
+  // Check for existing session on page load
+  window.addEventListener('DOMContentLoaded', () => {
+    const savedEmail = loadSession();
+    if (savedEmail) {
+      currentUser = savedEmail;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('appScreen').classList.add('visible');
+      document.getElementById('userEmail').textContent = savedEmail;
+      document.getElementById('userAvatar').textContent = savedEmail[0].toUpperCase();
+      document.getElementById('userPill').classList.add('visible');
+      initStatusDropdown();
+      loadClientLabels();
+    }
+  });
+
   const CLIENT_NAME_MAP = { 'carrefourr': 'Carrefour' };
   const CATEGORIES = ['New Features','Improvements','Bug Fixes','Platform & Performance'];
   const ALL_STATUSES = ['To Do','Dev To Do (Github)','In Progress','QA In Progress','Testing Completed','Pending Verification','TO BE REVIEWED','REVIEWED','Done'];
@@ -310,7 +365,7 @@
       el.onclick=()=>toggleOption(name,opt,options); dd.appendChild(el);
     });
   }
-  function toggleAll(name,options){ msState[name]=msState[name].length===options.length?[...]:([...options]); buildDropdown(name,options,name==='client'); updateTrigger(name); }
+  function toggleAll(name,options){ msState[name]=msState[name].length===options.length?[]:([...options]); buildDropdown(name,options,name==='client'); updateTrigger(name); }
   function toggleOption(name,opt,options){ const i=msState[name].indexOf(opt); if(i===-1)msState[name].push(opt);else msState[name].splice(i,1); buildDropdown(name,options,name==='client'); updateTrigger(name); }
   function updateTrigger(name){
     const trigger=document.getElementById(name+'Trigger');
@@ -355,6 +410,7 @@
       const res=await fetch('/api/otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'verify',email:currentUser,otp})});
       let data; try{data=await res.json();}catch{data={error:'Server error. Please contact deven@voiro.com'};}
       if(!res.ok){errEl.textContent=data.error||'Verification failed.';errEl.classList.add('visible');return;}
+      saveSession(currentUser);
       document.getElementById('loginScreen').style.display='none';
       document.getElementById('appScreen').classList.add('visible');
       document.getElementById('userEmail').textContent=currentUser;
