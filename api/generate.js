@@ -160,29 +160,51 @@ export default async function handler(req, res) {
 
     steps.push(`Found ${vtechLinks.length} linked tickets`);
 
-    // Step 2: Resolve each VTECH → PP, filter by status
-    const ppMap = {};
+    // Step 2: Fetch all VTECH tickets in parallel
+    const vtechResults = await Promise.all(
+      vtechLinks.map(vk => fetchIssue(vk, 'summary,issuelinks,customfield_10627,description,status'))
+    );
 
-    for (const vk of vtechLinks) {
-      const vtech = await fetchIssue(vk, 'summary,issuelinks,customfield_10627,description,status');
-      const vtechStatus = vtech.fields.status?.name;
+    // Step 3: Identify PP tickets needed, fetch them in parallel
+    const ppKeysNeeded = [];
+    const vtechToPP = {};
 
+    for (let i = 0; i < vtechLinks.length; i++) {
+      const vk = vtechLinks[i];
+      const vtech = vtechResults[i];
       const cloneLink = (vtech.fields.issuelinks || []).find(
         l => l.type.name === 'Cloners' && l.outwardIssue?.key?.startsWith('PP-')
       );
-
       if (cloneLink) {
         const ppKey = cloneLink.outwardIssue.key;
-        if (ppMap[ppKey]) continue;
-        const pp = await fetchIssue(ppKey, 'summary,customfield_10627,description,status');
-        const ppStatus = pp.fields.status?.name;
+        vtechToPP[vk] = ppKey;
+        if (!ppKeysNeeded.includes(ppKey)) ppKeysNeeded.push(ppKey);
+      }
+    }
 
-        // Use VTECH status for filtering (it's the implementation ticket)
+    // Fetch all PP tickets in parallel
+    const ppResults = await Promise.all(
+      ppKeysNeeded.map(pk => fetchIssue(pk, 'summary,customfield_10627,description,status'))
+    );
+    const ppByKey = {};
+    ppKeysNeeded.forEach((pk, i) => { ppByKey[pk] = ppResults[i]; });
+
+    // Step 4: Build ppMap with status filtering
+    const ppMap = {};
+
+    for (let i = 0; i < vtechLinks.length; i++) {
+      const vk = vtechLinks[i];
+      const vtech = vtechResults[i];
+      const vtechStatus = vtech.fields.status?.name;
+
+      if (vtechToPP[vk]) {
+        const ppKey = vtechToPP[vk];
+        if (ppMap[ppKey]) continue; // deduplicate
         if (!matchesStatus(vtechStatus, statusFilter)) {
           steps.push(`Skipping ${ppKey} — status "${vtechStatus}" not selected`);
           continue;
         }
-
+        const pp = ppByKey[ppKey];
         ppMap[ppKey] = {
           key: ppKey,
           summary: pp.fields.summary,
@@ -206,7 +228,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // Step 3: Filter by client
+    // Step 5: Filter by client
     const filtered = Object.values(ppMap).filter(t => matchesClient(t.clientCategory, clientFilter, allClientOptions));
     steps.push(`${filtered.length} tickets match filters`);
 
@@ -214,7 +236,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ notes: [], steps, empty: true });
     }
 
-    // Step 4: Generate with Claude
+    // Step 6: Generate with Claude
     steps.push('Generating release notes...');
     const notes = await callClaude(filtered, clientFilter);
     steps.push('Done');
