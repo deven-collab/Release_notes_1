@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voiro — Release Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #f5f5f7;
+    color: #1a1a2e;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    background: #fff;
+    border-bottom: 1px solid #e5e5ea;
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo-dot {
+    width: 8px; height: 8px;
+    background: #4f46e5;
+    border-radius: 50%;
+  }
+  .header-right {
+    font-size: 12px;
+    color: #8e8ea0;
+  }
+  .user-pill {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    background: #f5f5f7;
+    border: 1px solid #e5e5ea;
+    border-radius: 20px;
+    padding: 4px 12px 4px 8px;
+    font-size: 12px;
+    color: #4f46e5;
+    font-weight: 500;
+  }
+  .user-pill.visible { display: flex; }
+  .user-avatar {
+    width: 20px; height: 20px;
+    background: #4f46e5;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  /* Login screen */
+  .login-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 56px);
+    padding: 24px;
+  }
+  .login-card {
+    background: #fff;
+    border: 1px solid #e5e5ea;
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .login-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .login-subtitle {
+    font-size: 13px;
+    color: #8e8ea0;
+    margin-bottom: 28px;
+    line-height: 1.5;
+  }
+  .login-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .login-error.visible { display: block; }
+
+  /* Main app */
+  .app-screen {
+    display: none;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    gap: 24px;
+  }
+  .app-screen.visible { display: flex; flex-direction: column; }
+
+  /* Form card */
+  .form-card {
+    background: #fff;
+    border: 1px solid #e5e5ea;
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .form-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #8e8ea0;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 20px;
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    align-items: end;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #3a3a52;
+  }
+  .field input, .field select {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    background: #fff;
+    border: 1px solid #d1d1db;
+    border-radius: 8px;
+    color: #1a1a2e;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    width: 100%;
+  }
+  .field input:focus, .field select:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.08);
+  }
+  .field input::placeholder { color: #b0b0c0; }
+
+  .btn-primary {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    background: #4f46e5;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn-primary:hover { background: #4338ca; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    background: #fff;
+    color: #3a3a52;
+    border: 1px solid #d1d1db;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { border-color: #4f46e5; color: #4f46e5; }
+
+  /* Status steps */
+  .steps-box {
+    background: #f9f9fb;
+    border: 1px solid #e5e5ea;
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: none;
+  }
+  .steps-box.visible { display: block; }
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #8e8ea0;
+    padding: 4px 0;
+  }
+  .step-item.done { color: #1a1a2e; }
+  .step-item.active { color: #4f46e5; }
+  .step-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #d1d1db;
+    flex-shrink: 0;
+  }
+  .step-item.done .step-dot { background: #22c55e; }
+  .step-item.active .step-dot { background: #4f46e5; }
+
+  /* Output area */
+  .output-area { display: none; flex-direction: column; gap: 16px; }
+  .output-area.visible { display: flex; }
+
+  .output-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .output-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid #e5e5ea;
+    color: #3a3a52;
+    background: #fff;
+  }
+  .chip.client { background: #eef2ff; border-color: #c7d2fe; color: #4f46e5; }
+  .chip.date { background: #f0fdf4; border-color: #bbf7d0; color: #16a34a; }
+  .output-actions { display: flex; gap: 8px; }
+
+  /* Category section */
+  .category-section { display: flex; flex-direction: column; gap: 10px; }
+  .category-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8e8ea0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e5e5ea;
+  }
+
+  /* Note card */
+  .note-card {
+    background: #fff;
+    border: 1px solid #e5e5ea;
+    border-radius: 10px;
+    padding: 18px 20px;
+    animation: fadeUp 0.25s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .note-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .note-body {
+    font-size: 14px;
+    line-height: 1.65;
+    color: #52526e;
+  }
+
+  /* Flag card */
+  .flag-card {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .flag-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #d97706;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+  .flag-reason { font-size: 13px; color: #92400e; }
+
+  /* Empty */
+  .empty-msg {
+    background: #fff;
+    border: 1px solid #e5e5ea;
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    color: #8e8ea0;
+    font-size: 14px;
+  }
+
+  /* Spinner */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .form-row { grid-template-columns: 1fr; }
+    .header { padding: 0 16px; }
+    .app-screen { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Voiro Release Notes
+  </div>
+  <div class="user-pill" id="userPill">
+    <div class="user-avatar" id="userAvatar"></div>
+    <span id="userEmail"></span>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-title">Sign in</div>
+    <div class="login-subtitle">Enter your Voiro email address to access the Release Notes tool.</div>
+    <div class="login-error" id="loginError"></div>
+    <div class="field" style="margin-bottom:16px;">
+      <label>Email address</label>
+      <input type="email" id="loginEmail" placeholder="you@voiro.com" onkeydown="if(event.key==='Enter')login()" />
+    </div>
+    <button class="btn-primary" style="width:100%;justify-content:center;" onclick="login()">Continue →</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app-screen" id="appScreen">
+
+  <div class="form-card">
+    <div class="form-card-title">Generate Release Notes</div>
+    <div class="form-row">
+      <div class="field">
+        <label>DEVOPS Ticket ID</label>
+        <input type="text" id="devopsTicket" placeholder="e.g. DEVOPS-458" />
+      </div>
+      <div class="field">
+        <label>Client</label>
+        <select id="clientFilter">
+          <option value="">Select client...</option>
+          <option value="all">All Clients</option>
+          <option value="DSTV">DSTV</option>
+          <option value="Flipkart">Flipkart</option>
+          <option value="Myntra">Myntra</option>
+          <option value="Paytm">Paytm</option>
+          <option value="SonyLiv">SonyLiv</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Release Date</label>
+        <input type="date" id="releaseDate" />
+      </div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px;align-items:center;">
+      <button class="btn-primary" id="generateBtn" onclick="generate()">
+        <span id="btnText">Generate</span>
+        <span id="btnSpinner" class="spinner" style="display:none"></span>
+      </button>
+      <div id="errorMsg" style="font-size:13px;color:#dc2626;display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Steps -->
+  <div class="steps-box" id="stepsBox"></div>
+
+  <!-- Output -->
+  <div class="output-area" id="outputArea"></div>
+
+</div>
+
+<script>
+  document.getElementById('releaseDate').value = new Date().toISOString().split('T')[0];
+
+  let currentUser = null;
+  let currentNotes = null;
+  let currentMeta = null;
+
+  // Simple client-side email check before hitting the API
+  const ALLOWED = ['abash@voiro.com', 'kavya@voiro.com', 'deven@voiro.com'];
+
+  function login() {
+    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+    const errEl = document.getElementById('loginError');
+
+    if (!email) {
+      errEl.textContent = 'Please enter your email address.';
+      errEl.classList.add('visible');
+      return;
+    }
+
+    if (!ALLOWED.includes(email)) {
+      errEl.textContent = 'Access denied. Your email is not authorised to use this tool.';
+      errEl.classList.add('visible');
+      return;
+    }
+
+    errEl.classList.remove('visible');
+    currentUser = email;
+
+    // Update UI
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appScreen').classList.add('visible');
+    document.getElementById('userEmail').textContent = email;
+    document.getElementById('userAvatar').textContent = email[0].toUpperCase();
+    document.getElementById('userPill').classList.add('visible');
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function hideError() {
+    document.getElementById('errorMsg').style.display = 'none';
+  }
+
+  function setLoading(on) {
+    document.getElementById('generateBtn').disabled = on;
+    document.getElementById('btnText').textContent = on ? 'Generating...' : 'Generate';
+    document.getElementById('btnSpinner').style.display = on ? 'inline-block' : 'none';
+  }
+
+  function renderSteps(steps, activeIndex) {
+    const box = document.getElementById('stepsBox');
+    box.classList.add('visible');
+    box.innerHTML = steps.map((s, i) => `
+      <div class="step-item ${i < activeIndex ? 'done' : i === activeIndex ? 'active' : ''}">
+        <div class="step-dot"></div>
+        <span>${s}</span>
+      </div>
+    `).join('');
+  }
+
+  async function generate() {
+    const devopsTicket = document.getElementById('devopsTicket').value.trim().toUpperCase();
+    const clientFilter = document.getElementById('clientFilter').value;
+    const releaseDate = document.getElementById('releaseDate').value;
+
+    hideError();
+
+    if (!devopsTicket || !clientFilter || !releaseDate) {
+      showError('Please fill in all fields.');
+      return;
+    }
+
+    setLoading(true);
+    document.getElementById('outputArea').classList.remove('visible');
+    document.getElementById('outputArea').innerHTML = '';
+
+    const progressSteps = [
+      'Connecting to Jira...',
+      'Fetching linked tickets...',
+      'Resolving ticket hierarchy...',
+      'Filtering by client...',
+      'Generating release notes...'
+    ];
+
+    // Animate steps while waiting
+    let stepIndex = 0;
+    renderSteps(progressSteps, stepIndex);
+    const stepTimer = setInterval(() => {
+      stepIndex = Math.min(stepIndex + 1, progressSteps.length - 1);
+      renderSteps(progressSteps, stepIndex);
+    }, 1800);
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: currentUser, devopsTicket, clientFilter, releaseDate })
+      });
+
+      clearInterval(stepTimer);
+      renderSteps(progressSteps, progressSteps.length);
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showError(data.error || 'Something went wrong.');
+        return;
+      }
+
+      if (data.empty || !data.notes?.length) {
+        document.getElementById('outputArea').innerHTML = `<div class="empty-msg">No tickets found for this client on ${devopsTicket}. Check the ticket ID or try a different client filter.</div>`;
+        document.getElementById('outputArea').classList.add('visible');
+        return;
+      }
+
+      currentNotes = data.notes;
+      currentMeta = { client: clientFilter === 'all' ? 'All Clients' : clientFilter, date: releaseDate, devopsId: devopsTicket };
+
+      renderOutput(data.notes, currentMeta);
+
+    } catch (err) {
+      clearInterval(stepTimer);
+      showError('Network error: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function renderOutput(notes, meta) {
+    const area = document.getElementById('outputArea');
+    area.innerHTML = '';
+
+    const formattedDate = new Date(meta.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    const flags = notes.filter(n => n.flag);
+    const valid = notes.filter(n => !n.flag);
+
+    // Top bar
+    const topbar = document.createElement('div');
+    topbar.className = 'output-topbar';
+    topbar.innerHTML = `
+      <div class="output-meta">
+        <span class="chip client">${meta.client}</span>
+        <span class="chip date">${formattedDate}</span>
+        <span class="chip">${meta.devopsId}</span>
+        <span class="chip">${valid.length} update${valid.length !== 1 ? 's' : ''}</span>
+      </div>
+      <div class="output-actions">
+        <button class="btn-secondary" onclick="copyNotes()">⎘ Copy</button>
+        <button class="btn-secondary" onclick="emailDraft()">✉ Draft Email</button>
+      </div>
+    `;
+    area.appendChild(topbar);
+
+    // Group by category
+    const categories = ['New Features', 'Improvements', 'Bug Fixes', 'Platform & Performance'];
+    categories.forEach(cat => {
+      const items = valid.filter(n => n.category === cat);
+      if (!items.length) return;
+
+      const section = document.createElement('div');
+      section.className = 'category-section';
+      section.innerHTML = `<div class="category-label">${cat}</div>`;
+
+      items.forEach((note, i) => {
+        const card = document.createElement('div');
+        card.className = 'note-card';
+        card.style.animationDelay = `${i * 0.05}s`;
+        card.innerHTML = `
+          <div class="note-title">${note.title}</div>
+          <div class="note-body">${note.description}</div>
+        `;
+        section.appendChild(card);
+      });
+
+      area.appendChild(section);
+    });
+
+    // Flags
+    if (flags.length) {
+      const flagSection = document.createElement('div');
+      flagSection.className = 'category-section';
+      flagSection.innerHTML = `<div class="category-label" style="color:#d97706;">⚠ Needs Review</div>`;
+      flags.forEach(f => {
+        const card = document.createElement('div');
+        card.className = 'flag-card';
+        card.innerHTML = `<div class="flag-label">Flagged — ${f.key}</div><div class="flag-reason">${f.reason}</div>`;
+        flagSection.appendChild(card);
+      });
+      area.appendChild(flagSection);
+    }
+
+    area.classList.add('visible');
+  }
+
+  function buildPlainText() {
+    if (!currentNotes || !currentMeta) return '';
+    const formattedDate = new Date(currentMeta.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    const valid = currentNotes.filter(n => !n.flag);
+    const categories = ['New Features', 'Improvements', 'Bug Fixes', 'Platform & Performance'];
+    let text = `Release Notes — ${currentMeta.client}\n${formattedDate}\n${'─'.repeat(40)}\n\n`;
+    categories.forEach(cat => {
+      const items = valid.filter(n => n.category === cat);
+      if (!items.length) return;
+      text += `${cat.toUpperCase()}\n\n`;
+      items.forEach(n => { text += `${n.title}\n${n.description}\n\n`; });
+    });
+    return text.trim();
+  }
+
+  function copyNotes() {
+    navigator.clipboard.writeText(buildPlainText()).then(() => {
+      const btns = document.querySelectorAll('.btn-secondary');
+      btns[0].textContent = '✓ Copied';
+      setTimeout(() => { btns[0].innerHTML = '⎘ Copy'; }, 2000);
+    });
+  }
+
+  function emailDraft() {
+    const formattedDate = new Date(currentMeta.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    const subject = encodeURIComponent(`Voiro Platform Release Notes — ${formattedDate}`);
+    const body = encodeURIComponent(buildPlainText());
+    window.open(`mailto:?subject=${subject}&body=${body}`);
+  }
+</script>
+</body>
+</html>
