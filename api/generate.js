@@ -105,18 +105,24 @@ There are ${ticketCount} tickets. Your output array MUST contain exactly ${ticke
 
 ${ticketList}
 
-Return ONLY a valid JSON array of exactly ${ticketCount} items. No preamble, no markdown. Each item:
+Return ONLY a valid JSON object. No preamble, no markdown. Format:
 {
-  "key": "...",
-  "ppKey": "...",
-  "category": "New Features" | "Improvements" | "Bug Fixes" | "Platform & Performance",
-  "title": "...",
-  "summary": "...",
-  "bullets": ["...", "...", "..."],
-  "client": "...",
-  "flag": false
+  "summary": "A 2-3 sentence factual summary of this release. State what areas of the platform were updated and what users can now do. No fancy words, no fluff, no marketing language. Plain and factual only.",
+  "notes": [
+    {
+      "key": "...",
+      "ppKey": "...",
+      "category": "New Features" | "Improvements" | "Bug Fixes" | "Platform & Performance",
+      "title": "...",
+      "summary": "...",
+      "bullets": ["...", "...", "..."],
+      "client": "...",
+      "flag": false
+    }
+  ]
 }
-Or if too vague: { "key": "...", "flag": true, "reason": "..." }`;
+The notes array MUST contain exactly ${ticketCount} items.
+Or if a note is too vague: { "key": "...", "flag": true, "reason": "..." }`;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -139,10 +145,13 @@ Or if too vague: { "key": "...", "flag": true, "reason": "..." }`;
   }
 
   const data = await res.json();
-  const raw = data.content?.find(b => b.type === 'text')?.text || '[]';
+  const raw = data.content?.find(b => b.type === 'text')?.text || '{}';
   const clean = raw.replace(/```json|```/g, '').trim();
   try {
-    return JSON.parse(clean);
+    const parsed = JSON.parse(clean);
+    // Handle both new format {summary, notes} and old format [array]
+    if (Array.isArray(parsed)) return { summary: '', notes: parsed };
+    return { summary: parsed.summary || '', notes: parsed.notes || [] };
   } catch (e) {
     throw new Error(`Claude response parse error: ${clean.slice(0, 200)}`);
   }
@@ -243,10 +252,10 @@ module.exports = async function handler(req, res) {
     }
 
     // Step 6: Generate with Claude
-    const notes = await callClaude(filtered, clientFilter);
+    const result = await callClaude(filtered, clientFilter);
     steps.push('Done');
 
-    return res.status(200).json({ notes, steps });
+    return res.status(200).json({ notes: result.notes, summary: result.summary, steps });
 
   } catch (err) {
     console.error(err);
