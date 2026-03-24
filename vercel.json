@@ -1,13 +1,10 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "api/generate.js", "use": "@vercel/node" },
-    { "src": "api/labels.js", "use": "@vercel/node" },
-    { "src": "public/**", "use": "@vercel/static" }
-  ],
   "routes": [
     { "src": "/api/generate", "dest": "/api/generate.js" },
     { "src": "/api/labels", "dest": "/api/labels.js" },
+    { "src": "/api/otp", "dest": "/api/otp.js" },
     { "src": "/(.*)", "dest": "/public/index.html" }
   ]
 }
+
