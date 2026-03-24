@@ -165,6 +165,11 @@
   .add-bullet-btn:hover { border-color: #37b6bb; color: #0f766e; background: #f0fdfc; }
   .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #f3f4f6; }
 
+  /* Summary card */
+  .summary-card { background: #f0fdfc; border: 1px solid #99e6ea; border-radius: 14px; padding: 20px 24px; }
+  .summary-card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #0f766e; margin-bottom: 8px; }
+  .summary-card-text { font-size: 14px; line-height: 1.7; color: #134e4a; }
+
   @keyframes spin { to { transform: rotate(360deg); } }
   .spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
   .spinner-sm { width: 12px; height: 12px; border: 2px solid #e5e7eb; border-top-color: #37b6bb; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
@@ -498,7 +503,7 @@
       if(data.empty||!data.notes?.length){document.getElementById('outputArea').innerHTML=`<div class="empty-msg"><div class="empty-icon">🔍</div>No tickets found matching your filters on ${devopsTicket}.<br>Try adjusting your client or status filters.</div>`;document.getElementById('outputArea').classList.add('visible');return;}
       currentNotes=data.notes.filter(n=>!n.flag);
       const clientLabel=clientFilter.length===(window._clientOptions||[]).length?'All Clients':clientFilter.join(', ');
-      currentMeta={client:clientLabel,devopsId:devopsTicket};
+      currentMeta={client:clientLabel,devopsId:devopsTicket,summary:data.summary||''};
       renderOutput();
     }catch(err){clearInterval(timer);showError('Network error: '+err.message);}
     finally{setLoading(false);}
@@ -506,6 +511,12 @@
 
   function renderOutput(){
     const area=document.getElementById('outputArea'); area.innerHTML='';
+    // Summary card
+    if(currentMeta.summary){
+      const sc=document.createElement('div'); sc.className='summary-card';
+      sc.innerHTML=`<div class="summary-card-label">Release Summary</div><div class="summary-card-text">${currentMeta.summary}</div>`;
+      area.appendChild(sc);
+    }
     const topbar=document.createElement('div'); topbar.className='output-topbar';
     const count=currentNotes.filter(n=>!n.flag).length;
     topbar.innerHTML=`
@@ -633,144 +644,188 @@
   function copyNotes(){ navigator.clipboard.writeText(buildPlainText()).then(()=>{const btn=document.querySelector('.output-actions .btn-secondary');btn.textContent='✓ Copied';setTimeout(()=>{btn.innerHTML='⎘ Copy';},2000);}); }
   function copyForEmail(){ navigator.clipboard.writeText(buildEmailSummary()).then(()=>{const btns=document.querySelectorAll('.output-actions .btn-secondary');btns[1].textContent='✓ Copied';setTimeout(()=>{btns[1].innerHTML='✉ Copy for Email';},2000);}); }
 
-  // PDF — clean redesign
+  // PDF — global standard redesign
   function downloadPDF(){
     if(!currentNotes||!currentMeta) return;
     const doc=new jsPDF({unit:'pt',format:'a4'});
-    const W=595, ml=52, mr=52, cW=W-ml-mr;
+    const W=595, ML=56, MR=56, CW=W-ML-MR;
     const today=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
     const filename=`Voiro_Release_Notes_${currentMeta.devopsId}_${new Date().toISOString().split('T')[0]}.pdf`;
-
-    // Colors
-    const teal=[55,182,187], red=[233,62,53], dark=[89,90,92], mid=[100,100,110], light=[160,160,170], border=[220,220,225], bgLight=[248,248,250], purple=[79,70,229], white=[255,255,255];
-
-    function addPageHeader(pageNum){
-      // Thin teal top bar
-      doc.setFillColor(...teal); doc.rect(0,0,W,4,'F');
-      // Logo area
-      doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(...teal);
-      doc.text('Voiro',ml,28);
-      doc.setFont('helvetica','normal'); doc.setFontSize(14); doc.setTextColor(...dark);
-      doc.text(' Release Notes',ml+32,28);
-      // Right side — date
-      doc.setFontSize(9); doc.setTextColor(...light);
-      doc.text(today, W-mr, 28, {align:'right'});
-      // Divider
-      doc.setDrawColor(...border); doc.setLineWidth(0.5); doc.line(ml,38,W-mr,38);
-    }
-
-    function addPageFooter(pageNum, totalPages){
-      doc.setDrawColor(...border); doc.setLineWidth(0.5); doc.line(ml,820,W-mr,820);
-      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...light);
-      doc.text('Confidential — Voiro Technologies', ml, 832);
-      doc.text(`${currentMeta.devopsId}  ·  Page ${pageNum} of ${totalPages}`, W-mr, 832, {align:'right'});
-    }
-
-    // Page 1 header
-    addPageHeader(1);
-    let y=58;
-
-    // Cover block — client + title
-    y+=16;
-    doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.setTextColor(...dark);
-    const titleLines=doc.splitTextToSize(`Release Notes — ${currentMeta.client}`, cW);
-    doc.text(titleLines, ml, y); y+=titleLines.length*28+6;
-    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...light);
-    doc.text(today, ml, y); y+=28;
-
-    // Summary bar
     const validNotes=currentNotes.filter(n=>!n.flag);
-    const catCounts=CATEGORIES.map(c=>({cat:c,count:validNotes.filter(n=>n.category===c).length})).filter(x=>x.count>0);
-    const barH=36;
-    doc.setFillColor(...bgLight); doc.setDrawColor(...border); doc.setLineWidth(0.5);
-    doc.roundedRect(ml,y,cW,barH,4,4,'FD');
-    let bx=ml+16;
-    catCounts.forEach((item,idx)=>{
-      if(idx>0){doc.setDrawColor(...border);doc.setLineWidth(0.5);doc.line(bx,y+8,bx,y+barH-8);bx+=12;}
-      doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...dark);
-      doc.text(String(item.count),bx,y+23);
-      bx+=doc.getTextWidth(String(item.count))+5;
-      doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...light);
-      doc.text(item.cat,bx,y+23);
-      bx+=doc.getTextWidth(item.cat)+20;
-    });
-    y+=barH+24;
 
-    // Divider before content
-    doc.setDrawColor(...border); doc.setLineWidth(0.5); doc.line(ml,y,W-mr,y); y+=20;
+    // Brand colors
+    const TEAL=[55,182,187], RED=[233,62,53], DARK=[40,40,50], MID=[90,90,105], LIGHT=[155,155,170],
+          BORDER=[225,225,230], BGGRAY=[248,248,250], BGTEAL=[240,253,252], WHITE=[255,255,255],
+          BADGECOLORS={
+            'New Features':[[5,150,105],[209,250,229]],
+            'Improvements':[[55,182,187],[224,253,252]],
+            'Bug Fixes':[[220,38,38],[254,226,226]],
+            'Platform & Performance':[[100,100,120],[243,244,246]]
+          };
 
-    const PAGE_BOTTOM=800;
+    function wrapText(text, maxW) {
+      return doc.splitTextToSize(text || '', maxW);
+    }
 
+    function addHeader(){
+      // Full-width teal header bar
+      doc.setFillColor(...TEAL); doc.rect(0,0,W,72,'F');
+      // Logo — "Voiro" wordmark in white
+      doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.setTextColor(255,255,255);
+      doc.text('Voiro',ML,44);
+      doc.setFont('helvetica','normal'); doc.setFontSize(15); doc.setTextColor(200,245,245);
+      doc.text(' Release Notes',ML+51,44);
+      // Client name right-aligned
+      doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(255,255,255);
+      doc.text(currentMeta.client, W-MR, 36, {align:'right'});
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(200,245,245);
+      doc.text(today, W-MR, 52, {align:'right'});
+    }
+
+    function addFooter(pageNum, totalPages){
+      doc.setDrawColor(...BORDER); doc.setLineWidth(0.5); doc.line(ML,822,W-MR,822);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...LIGHT);
+      doc.text('Confidential — Voiro Technologies', ML, 834);
+      doc.text(`${currentMeta.devopsId}  ·  Page ${pageNum} of ${totalPages}`, W-MR, 834, {align:'right'});
+    }
+
+    function checkPage(y, neededH){
+      if(y + neededH > 810){ doc.addPage(); addHeader(); return 90; }
+      return y;
+    }
+
+    // Page 1
+    addHeader();
+    let y = 90;
+
+    // Executive summary block
+    if(currentMeta.summary){
+      const sumLines = wrapText(currentMeta.summary, CW-32);
+      const sumH = 16 + sumLines.length * 15 + 16;
+      doc.setFillColor(...BGTEAL); doc.setDrawColor(...TEAL); doc.setLineWidth(0.5);
+      doc.roundedRect(ML, y, CW, sumH, 5, 5, 'FD');
+      // Teal left bar
+      doc.setFillColor(...TEAL); doc.rect(ML, y, 4, sumH, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...TEAL);
+      doc.text('RELEASE SUMMARY', ML+14, y+12);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(...DARK);
+      doc.text(sumLines, ML+14, y+24);
+      y += sumH + 20;
+    }
+
+    // Stats row — count per category
+    const catCounts = CATEGORIES.map(c=>({cat:c,count:validNotes.filter(n=>n.category===c).length})).filter(x=>x.count>0);
+    if(catCounts.length>0){
+      const statH = 36, statW = CW / catCounts.length;
+      catCounts.forEach((item,idx)=>{
+        const sx = ML + idx * statW;
+        doc.setFillColor(...BGGRAY); doc.setDrawColor(...BORDER); doc.setLineWidth(0.5);
+        doc.rect(sx, y, statW, statH, 'FD');
+        doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(...TEAL);
+        doc.text(String(item.count), sx+14, y+24);
+        doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...MID);
+        doc.text(item.cat, sx+30, y+24);
+      });
+      y += statH + 24;
+    }
+
+    // Divider
+    doc.setDrawColor(...BORDER); doc.setLineWidth(1); doc.line(ML, y, W-MR, y);
+    y += 20;
+
+    // Content
     CATEGORIES.forEach(cat=>{
-      const items=currentNotes.filter(n=>!n.flag&&n.category===cat);
+      const items = validNotes.filter(n=>n.category===cat);
       if(!items.length) return;
 
+      const [badgeFg, badgeBg] = BADGECOLORS[cat] || [[100,100,120],[243,244,246]];
+
       // Category heading
-      if(y+30>PAGE_BOTTOM){ doc.addPage(); addPageHeader(doc.internal.getNumberOfPages()); y=60; }
-      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...teal);
-      doc.text(cat.toUpperCase(),ml,y);
-      doc.setDrawColor(...teal); doc.setLineWidth(1); doc.line(ml,y+4,ml+doc.getTextWidth(cat.toUpperCase()),y+4);
-      doc.setLineWidth(0.5); doc.setDrawColor(...border); doc.line(ml+doc.getTextWidth(cat.toUpperCase())+6,y+4,W-mr,y+4);
-      y+=20;
+      y = checkPage(y, 32);
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...DARK);
+      doc.text(cat, ML, y);
+      // Underline
+      doc.setDrawColor(...TEAL); doc.setLineWidth(1.5);
+      doc.line(ML, y+4, ML+doc.getTextWidth(cat), y+4);
+      doc.setLineWidth(0.5); doc.setDrawColor(...BORDER);
+      doc.line(ML+doc.getTextWidth(cat)+8, y+4, W-MR, y+4);
+      y += 20;
 
       items.forEach(note=>{
-        const titleTxt=note.title||'';
-        const summaryTxt=note.summary||note.description||'';
-        const tLines=doc.splitTextToSize(titleTxt,cW-16);
-        const sLines=doc.splitTextToSize(summaryTxt,cW-16);
-        const bulletLines=(note.bullets||[]).map(b=>doc.splitTextToSize(b,cW-36));
-        const bulletTotal=bulletLines.reduce((a,b)=>a+b.length,0);
-        // Estimate card height
-        const hasClient=note.client&&note.client!=='All';
-        const clientH=hasClient?18:0;
-        const cardH=14+clientH+tLines.length*17+8+sLines.length*14+(bulletTotal>0?6+bulletTotal*13:0)+14;
+        const clientTxt = note.client && note.client!=='All' ? normalizeClient(note.client).toUpperCase() : null;
+        const titleLines = wrapText(note.title||'', CW-48);  // extra room for badge
+        const sumLines = wrapText(note.summary||note.description||'', CW-24);
+        const bulletData = (note.bullets||[]).map(b=>wrapText(b, CW-44));
+        const bulletLineCount = bulletData.reduce((a,b)=>a+b.length,0);
 
-        if(y+cardH>PAGE_BOTTOM){ doc.addPage(); addPageHeader(doc.internal.getNumberOfPages()); y=60; }
+        const clientH = clientTxt ? 18 : 0;
+        const titleH = titleLines.length * 16;
+        const sumH = sumLines.length * 14 + 10;
+        const bullH = bulletLineCount > 0 ? bulletLineCount*13 + 14 : 0;
+        const cardH = 14 + clientH + titleH + sumH + bullH + 14;
 
-        // Card — white with left accent bar
-        doc.setFillColor(...white); doc.setDrawColor(...border); doc.setLineWidth(0.5);
-        doc.roundedRect(ml,y,cW,cardH,3,3,'FD');
-        // Teal left accent
-        doc.setFillColor(...teal); doc.rect(ml,y,3,cardH,'F');
+        y = checkPage(y, cardH);
 
-        let cy=y+14;
+        // Card
+        doc.setFillColor(...WHITE); doc.setDrawColor(...BORDER); doc.setLineWidth(0.5);
+        doc.roundedRect(ML, y, CW, cardH, 4, 4, 'FD');
+        // Left accent
+        doc.setFillColor(...TEAL); doc.rect(ML, y, 3, cardH, 'F');
+
+        let cy = y + 14;
 
         // Client tag
-        if(hasClient){
-          const tag=normalizeClient(note.client).toUpperCase();
-          doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...teal);
-          doc.text(tag,ml+12,cy); cy+=18;
+        if(clientTxt){
+          const tagW = doc.getTextWidth(clientTxt) * 0.85 + 14;
+          doc.setFontSize(7.5);
+          const tw = doc.getTextWidth(clientTxt) + 14;
+          doc.setFillColor(...BGTEAL); doc.setDrawColor(153,230,234); doc.setLineWidth(0.3);
+          doc.roundedRect(ML+12, cy-9, tw, 14, 3, 3, 'FD');
+          doc.setFont('helvetica','bold'); doc.setTextColor(15,118,110);
+          doc.text(clientTxt, ML+19, cy);
+          cy += 18;
         }
+
+        // Category badge (top right of card)
+        const badgeTxt = cat.toUpperCase();
+        doc.setFont('helvetica','bold'); doc.setFontSize(7);
+        const bw = doc.getTextWidth(badgeTxt) + 14;
+        doc.setFillColor(...badgeBg); doc.setDrawColor(...badgeFg); doc.setLineWidth(0.3);
+        doc.roundedRect(ML+CW-bw-8, y+8, bw, 13, 3, 3, 'FD');
+        doc.setTextColor(...badgeFg);
+        doc.text(badgeTxt, ML+CW-bw-1, y+17);
 
         // Title
-        doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...dark);
-        doc.text(tLines,ml+12,cy); cy+=tLines.length*17+8;
+        doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...DARK);
+        doc.text(titleLines, ML+12, cy);
+        cy += titleLines.length*16 + 8;
 
         // Summary
-        doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(...mid);
-        doc.text(sLines,ml+12,cy); cy+=sLines.length*14;
+        doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(...MID);
+        doc.text(sumLines, ML+12, cy);
+        cy += sumLines.length*14 + 8;
 
         // Bullets
-        if((note.bullets||[]).length>0){
-          cy+=6;
-          note.bullets.forEach(b=>{
-            const bLines=doc.splitTextToSize(b,cW-36);
-            doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...teal);
-            doc.text('•',ml+12,cy);
-            doc.setTextColor(...mid);
-            doc.text(bLines,ml+22,cy);
-            cy+=bLines.length*13;
+        if(bulletData.length > 0){
+          doc.setFillColor(...BGGRAY); doc.setDrawColor(235,235,240); doc.setLineWidth(0.3);
+          doc.roundedRect(ML+12, cy-2, CW-24, bullH+4, 3, 3, 'FD');
+          cy += 6;
+          bulletData.forEach(bLines=>{
+            doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+            doc.setTextColor(...TEAL); doc.text('•', ML+18, cy);
+            doc.setTextColor(...MID); doc.text(bLines, ML+27, cy);
+            cy += bLines.length*13;
           });
         }
-        y+=cardH+10;
+
+        y += cardH + 10;
       });
-      y+=12;
+      y += 12;
     });
 
-    // Add footers to all pages
-    const totalPages=doc.internal.getNumberOfPages();
-    for(let i=1;i<=totalPages;i++){ doc.setPage(i); addPageFooter(i,totalPages); }
-
+    // Footers
+    const totalPages = doc.internal.getNumberOfPages();
+    for(let i=1;i<=totalPages;i++){ doc.setPage(i); addFooter(i, totalPages); }
     doc.save(filename);
   }
 
