@@ -753,16 +753,30 @@
 
       items.forEach(note=>{
         const clientTxt = note.client && note.client!=='All' ? normalizeClient(note.client).toUpperCase() : null;
-        const titleLines = wrapText(note.title||'', CW-48);  // extra room for badge
-        const sumLines = wrapText(note.summary||note.description||'', CW-24);
-        const bulletData = (note.bullets||[]).map(b=>wrapText(b, CW-44));
+
+        // IMPORTANT: set font size BEFORE splitTextToSize so width calculation is correct
+        // Title width: full card minus left accent(3) + padding(12) + badge area(80) + right padding(12)
+        const TITLE_W = CW - 3 - 12 - 80 - 12;
+        // Summary width: full card minus left accent(3) + padding(12) + right padding(12)
+        const BODY_W = CW - 3 - 12 - 12;
+        // Bullet width: indent(15) + bullet(9) + right padding(12)
+        const BULL_W = CW - 3 - 12 - 15 - 9 - 12;
+
+        doc.setFont('helvetica','bold'); doc.setFontSize(11);
+        const titleLines = doc.splitTextToSize(note.title||'', TITLE_W);
+
+        doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+        const sumLines = doc.splitTextToSize(note.summary||note.description||'', BODY_W);
+
+        doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+        const bulletData = (note.bullets||[]).map(b=>doc.splitTextToSize(b, BULL_W));
         const bulletLineCount = bulletData.reduce((a,b)=>a+b.length,0);
 
-        const clientH = clientTxt ? 18 : 0;
+        const clientH = clientTxt ? 20 : 0;
         const titleH = titleLines.length * 16;
         const sumH = sumLines.length * 14 + 10;
-        const bullH = bulletLineCount > 0 ? bulletLineCount*13 + 14 : 0;
-        const cardH = 14 + clientH + titleH + sumH + bullH + 14;
+        const bullH = bulletLineCount > 0 ? bulletLineCount * 13 + 16 : 0;
+        const cardH = 16 + clientH + titleH + sumH + bullH + 16;
 
         y = checkPage(y, cardH);
 
@@ -772,49 +786,49 @@
         // Left accent
         doc.setFillColor(...TEAL); doc.rect(ML, y, 3, cardH, 'F');
 
-        let cy = y + 14;
+        let cy = y + 16;
 
         // Client tag
         if(clientTxt){
-          const tagW = doc.getTextWidth(clientTxt) * 0.85 + 14;
-          doc.setFontSize(7.5);
+          doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
           const tw = doc.getTextWidth(clientTxt) + 14;
           doc.setFillColor(...BGTEAL); doc.setDrawColor(153,230,234); doc.setLineWidth(0.3);
           doc.roundedRect(ML+12, cy-9, tw, 14, 3, 3, 'FD');
-          doc.setFont('helvetica','bold'); doc.setTextColor(15,118,110);
+          doc.setTextColor(15,118,110);
           doc.text(clientTxt, ML+19, cy);
-          cy += 18;
+          cy += 20;
         }
 
-        // Category badge (top right of card)
-        const badgeTxt = cat.toUpperCase();
+        // Category badge (top right of card) — set font before measuring
         doc.setFont('helvetica','bold'); doc.setFontSize(7);
-        const bw = doc.getTextWidth(badgeTxt) + 14;
+        const badgeTxt = cat.toUpperCase();
+        const bw = doc.getTextWidth(badgeTxt) + 16;
         doc.setFillColor(...badgeBg); doc.setDrawColor(...badgeFg); doc.setLineWidth(0.3);
-        doc.roundedRect(ML+CW-bw-8, y+8, bw, 13, 3, 3, 'FD');
+        doc.roundedRect(ML+CW-bw-10, y+8, bw, 14, 3, 3, 'FD');
         doc.setTextColor(...badgeFg);
-        doc.text(badgeTxt, ML+CW-bw-1, y+17);
+        doc.text(badgeTxt, ML+CW-bw-2, y+17);
 
         // Title
         doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...DARK);
-        doc.text(titleLines, ML+12, cy);
-        cy += titleLines.length*16 + 8;
+        doc.text(titleLines, ML+15, cy);
+        cy += titleLines.length * 16 + 8;
 
         // Summary
         doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(...MID);
-        doc.text(sumLines, ML+12, cy);
-        cy += sumLines.length*14 + 8;
+        doc.text(sumLines, ML+15, cy);
+        cy += sumLines.length * 14 + 8;
 
         // Bullets
         if(bulletData.length > 0){
           doc.setFillColor(...BGGRAY); doc.setDrawColor(235,235,240); doc.setLineWidth(0.3);
-          doc.roundedRect(ML+12, cy-2, CW-24, bullH+4, 3, 3, 'FD');
-          cy += 6;
+          doc.roundedRect(ML+15, cy-2, CW-30, bullH+4, 3, 3, 'FD');
+          cy += 8;
           bulletData.forEach(bLines=>{
             doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
-            doc.setTextColor(...TEAL); doc.text('•', ML+18, cy);
-            doc.setTextColor(...MID); doc.text(bLines, ML+27, cy);
-            cy += bLines.length*13;
+            doc.setTextColor(...TEAL); doc.text('•', ML+20, cy);
+            doc.setTextColor(...MID);
+            doc.text(bLines, ML+30, cy);
+            cy += bLines.length * 13;
           });
         }
 
