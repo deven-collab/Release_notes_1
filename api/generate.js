@@ -43,6 +43,13 @@ async function fetchIssue(key, fields = 'summary,issuelinks,customfield_10627,de
   return res.json();
 }
 
+// Normalize known typos in Jira custom field values
+const CLIENT_NAME_NORMALIZE = { 'carrefourr': 'Carrefour' };
+function normalizeClient(val) {
+  if (!val) return '';
+  return CLIENT_NAME_NORMALIZE[val.toLowerCase()] || val;
+}
+
 function extractADF(node) {
   if (!node) return '';
   if (node.type === 'text') return node.text || '';
@@ -75,11 +82,12 @@ function matchesClient(clientCategory, clientFilter, allClientOptions) {
   // No filter or all clients selected — include everything
   if (!clientFilter || clientFilter.length === 0) return true;
   if (allClientOptions && clientFilter.length >= allClientOptions.length) return true;
-  const val = (clientCategory || '').toLowerCase();
+  const normalized = normalizeClient(clientCategory || '');
+  const val = normalized.toLowerCase();
   // "Product" label means applies to all clients
   if (val === 'product') return true;
-  // Empty category on engineering tickets — include when all clients selected (already handled above)
-  // otherwise include if explicitly selected
+  // Empty means engineering ticket — include when subset selected too
+  if (!val) return true;
   return clientFilter.map(c => c.toLowerCase()).includes(val);
 }
 
@@ -87,6 +95,7 @@ async function callClaude(tickets, clientName) {
   const ticketList = tickets.map(t =>
     `Ticket: ${t.key}\nTitle: ${t.summary}\nClient: ${t.clientCategory || 'All'}\nDescription: ${t.description || 'No description provided.'}\nEngineering-only: ${t.engineeringOnly ? 'Yes' : 'No'}`
   ).join('\n\n---\n\n');
+
 
   const ticketCount = tickets.length;
 
@@ -103,9 +112,11 @@ ${ticketList}
 Return ONLY a JSON array of exactly ${ticketCount} items. No preamble, no markdown fences. Each item must be:
 {
   "key": "...",
+  "ppKey": "...",
   "category": "New Features" | "Improvements" | "Bug Fixes" | "Platform & Performance",
   "title": "...",
-  "description": "...",
+  "summary": "...",
+  "bullets": ["...", "..."],
   "client": "...",
   "flag": false
 }
@@ -115,7 +126,8 @@ Or if a ticket is too vague:
   "flag": true,
   "reason": "..."
 }
-The "client" field should be the client name from the ticket data above.`;
+The "client" field should be the client name from the ticket data above.
+The "ppKey" field should be the ticket key (e.g. PP-1225) for reference.`;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -126,7 +138,7 @@ The "client" field should be the client name from the ticket data above.`;
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 4000,
+      max_tokens: 6000,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: prompt }]
     })
@@ -213,9 +225,10 @@ export default async function handler(req, res) {
         const pp = ppByKey[ppKey];
         ppMap[ppKey] = {
           key: ppKey,
+          ppKey: ppKey,
           summary: pp.fields.summary,
           description: extractDescription(pp.fields.description),
-          clientCategory: pp.fields.customfield_10627?.value || '',
+          clientCategory: normalizeClient(pp.fields.customfield_10627?.value || ''),
           engineeringOnly: false
         };
       } else {
@@ -226,9 +239,10 @@ export default async function handler(req, res) {
         }
         ppMap[vk] = {
           key: vk,
+          ppKey: null,
           summary: vtech.fields.summary,
           description: extractDescription(vtech.fields.description),
-          clientCategory: vtech.fields.customfield_10627?.value || '',
+          clientCategory: normalizeClient(vtech.fields.customfield_10627?.value || ''),
           engineeringOnly: true
         };
       }
