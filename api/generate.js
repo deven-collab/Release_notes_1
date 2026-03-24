@@ -37,7 +37,7 @@ function jiraHeaders() {
   };
 }
 
-async function fetchIssue(key, fields = 'summary,issuelinks,labels,description,status') {
+async function fetchIssue(key, fields = 'summary,issuelinks,customfield_10627,description,status') {
   const url = `${JIRA_BASE_URL}/rest/api/3/issue/${key}?fields=${fields}`;
   const res = await fetch(url, { headers: jiraHeaders() });
   if (!res.ok) throw new Error(`Jira fetch failed for ${key}: ${res.status}`);
@@ -73,19 +73,21 @@ function isIncomplete(status) {
   return INCOMPLETE_STATUSES.includes((status || '').toLowerCase());
 }
 
-function matchesClient(labels, clientFilter) {
+function matchesClient(clientCategory, clientFilter) {
   if (!clientFilter || clientFilter === 'all') return true;
-  return labels.includes(clientFilter) || labels.includes('Product');
+  const val = (clientCategory || '').toLowerCase();
+  if (val === 'product') return true;
+  return val === clientFilter.toLowerCase();
 }
 
-async function callClaude(tickets, clientName, releaseDate) {
+async function callClaude(tickets, clientName) {
   const ticketList = tickets.map(t =>
     `Ticket: ${t.key}\nTitle: ${t.summary}\nDescription: ${t.description || 'No description provided.'}\nEngineering-only: ${t.engineeringOnly ? 'Yes' : 'No'}`
   ).join('\n\n---\n\n');
 
   const clientLabel = clientName === 'all' ? 'all clients' : clientName;
 
-  const prompt = `Generate release notes for ${clientLabel} for the release dated ${releaseDate}.
+  const prompt = `Generate release notes for ${clientLabel}.
 
 Here are the tickets:
 
@@ -134,14 +136,14 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { email, devopsTicket, clientFilter, releaseDate } = req.body || {};
+  const { email, devopsTicket, clientFilter } = req.body || {};
 
   // Auth — email whitelist
   if (!email || !ALLOWED_EMAILS.includes(email.toLowerCase())) {
     return res.status(403).json({ error: 'Access denied. Your email is not authorised.' });
   }
 
-  if (!devopsTicket || !clientFilter || !releaseDate) {
+  if (!devopsTicket || !clientFilter) {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
 
@@ -161,7 +163,7 @@ export default async function handler(req, res) {
     const ppMap = {};
 
     for (const vk of vtechLinks) {
-      const vtech = await fetchIssue(vk, 'summary,issuelinks,labels,description,status');
+      const vtech = await fetchIssue(vk, 'summary,issuelinks,customfield_10627,description,status');
       const cloneLink = (vtech.fields.issuelinks || []).find(
         l => l.type.name === 'Cloners' && l.outwardIssue?.key?.startsWith('PP-')
       );
@@ -169,7 +171,7 @@ export default async function handler(req, res) {
       if (cloneLink) {
         const ppKey = cloneLink.outwardIssue.key;
         if (ppMap[ppKey]) continue; // deduplicate
-        const pp = await fetchIssue(ppKey, 'summary,labels,description,status');
+        const pp = await fetchIssue(ppKey, 'summary,customfield_10627,description,status');
         // Skip incomplete items
         if (isIncomplete(pp.fields.status?.name)) {
           steps.push(`Skipping ${ppKey} (${pp.fields.status?.name})`);
@@ -179,7 +181,7 @@ export default async function handler(req, res) {
           key: ppKey,
           summary: pp.fields.summary,
           description: extractDescription(pp.fields.description),
-          labels: pp.fields.labels || [],
+          clientCategory: pp.fields.customfield_10627?.value || '',
           engineeringOnly: false
         };
       } else {
@@ -193,14 +195,14 @@ export default async function handler(req, res) {
           key: vk,
           summary: vtech.fields.summary,
           description: extractDescription(vtech.fields.description),
-          labels: vtech.fields.labels || [],
+          clientCategory: vtech.fields.customfield_10627?.value || '',
           engineeringOnly: true
         };
       }
     }
 
     // Step 3: Filter by client
-    const filtered = Object.values(ppMap).filter(t => matchesClient(t.labels, clientFilter));
+    const filtered = Object.values(ppMap).filter(t => matchesClient(t.clientCategory, clientFilter));
     steps.push(`${filtered.length} tickets match client filter`);
 
     if (filtered.length === 0) {
@@ -209,7 +211,7 @@ export default async function handler(req, res) {
 
     // Step 4: Generate with Claude
     steps.push('Generating release notes...');
-    const notes = await callClaude(filtered, clientFilter, releaseDate);
+    const notes = await callClaude(filtered, clientFilter);
     steps.push('Done');
 
     return res.status(200).json({ notes, steps });
