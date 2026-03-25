@@ -589,14 +589,14 @@
     const btn=document.getElementById('sendOTPBtn'); btn.disabled=true; btn.textContent='Sending...';
     try{
       const res=await fetch('/api/otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'send',email})});
-      let data; try{data=await res.json();}catch{data={error:'Server error. Please contact deven@voiro.com'};}
+      let data; try{data=await res.json();}catch(e){data={error:'Server error. Please contact deven@voiro.com'};}
       if(!res.ok){errEl.textContent=data.error||'Something went wrong.';errEl.classList.add('visible');return;}
       currentUser=email;
       document.getElementById('stepEmail').style.display='none';
       document.getElementById('stepOTP').style.display='block';
-      document.getElementById('otpSubtitle').innerHTML=`We sent a 6-digit code to <strong>${email}</strong>. It expires in 10 minutes.<br><br><span style="color:#9ca3af;font-size:13px;">Can't find it? Check your spam or junk folder, or search your inbox for <em>Your Voiro Release Notes login code</em>.</span>`;
+      document.getElementById('otpSubtitle').innerHTML='We sent a 6-digit code to <strong>'+email+'</strong>. It expires in 10 minutes.<br><br><span style="color:#9ca3af;font-size:13px;">Can\'t find it? Check your spam or junk folder, or search your inbox for <em>Your Voiro Release Notes login code</em>.</span>';
       setTimeout(()=>document.getElementById('otpInput').focus(),100);
-    }catch{errEl.textContent='Network error. Please try again.';errEl.classList.add('visible');}
+    }catch(e){errEl.textContent='Network error. Please try again.';errEl.classList.add('visible');}
     finally{btn.disabled=false;btn.textContent='Send Login Code →';}
   }
   function resendOTP(){ document.getElementById('stepOTP').style.display='none'; document.getElementById('stepEmail').style.display='block'; document.getElementById('otpInput').value=''; document.getElementById('otpError').classList.remove('visible'); }
@@ -607,7 +607,7 @@
     const btn=document.getElementById('verifyOTPBtn'); btn.disabled=true; btn.textContent='Verifying...';
     try{
       const res=await fetch('/api/otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'verify',email:currentUser,otp})});
-      let data; try{data=await res.json();}catch{data={error:'Server error. Please contact deven@voiro.com'};}
+      let data; try{data=await res.json();}catch(e){data={error:'Server error. Please contact deven@voiro.com'};}
       if(!res.ok){errEl.textContent=data.error||'Verification failed.';errEl.classList.add('visible');return;}
       saveSession(currentUser);
       document.getElementById('loginScreen').style.display='none';
@@ -616,7 +616,7 @@
       document.getElementById('userAvatar').textContent=currentUser[0].toUpperCase();
       document.getElementById('userPill').classList.add('visible');
       initStatusDropdown(); await loadClientLabels();
-    }catch{errEl.textContent='Network error. Please try again.';errEl.classList.add('visible');}
+    }catch(e){errEl.textContent='Network error. Please try again.';errEl.classList.add('visible');}
     finally{btn.disabled=false;btn.textContent='Verify →';}
   }
 
@@ -628,7 +628,7 @@
       const labels=(data.labels&&data.labels.length>0)?data.labels:FALLBACK_CLIENTS;
       window._clientOptions=labels; msState.client=[...labels];
       buildDropdown('client',labels,true); trigger.classList.remove('disabled'); updateTrigger('client');
-    }catch{
+    }catch(e){
       window._clientOptions=FALLBACK_CLIENTS; msState.client=[...FALLBACK_CLIENTS];
       buildDropdown('client',FALLBACK_CLIENTS,true); trigger.classList.remove('disabled'); updateTrigger('client');
     }
@@ -671,15 +671,12 @@
           model:'claude-sonnet-4-20250514',
           max_tokens:800,
           system:'You are rewriting a single release note entry. Keep the same factual information. Improve clarity and make it more readable for non-technical media planners. Keep the same structure. No marketing language, no fancy words. Return ONLY a JSON object: {"title":"...","summary":"...","bullets":["...","..."]}',
-          messages:[{role:'user',content:`Rewrite this release note:
-Title: ${title}
-Summary: ${summary}
-Bullets: ${bullets.join(' | ')}`}]
+          messages:[{role:'user',content:'Rewrite this release note:\nTitle: '+title+'\nSummary: '+summary+'\nBullets: '+bullets.join(' | ')}]
         })
       });
       const data=await res.json();
       const raw=data.content?.find(b=>b.type==='text')?.text||'{}';
-      const clean=raw.replace(/\`\`\`json|\`\`\`/g,'').trim();
+      const clean=raw.replace(/```json|```/g,'').trim();
       const result=JSON.parse(clean);
       if(result.title) document.getElementById('editTitle').value=result.title;
       if(result.summary) document.getElementById('editSummary').value=result.summary;
@@ -1405,15 +1402,12 @@ Bullets: ${bullets.join(' | ')}`}]
         body:JSON.stringify({
           model:'claude-sonnet-4-20250514',max_tokens:600,
           system:'Rewrite this monthly product update section. Keep all facts. Improve clarity, make it more strategic and narrative. No marketing language. Return ONLY JSON: {"title":"...","body":"...","operational_impact":"...","user_impact":"..."}',
-          messages:[{role:'user',content:`Title: ${sec.title}
-Body: ${sec.body}
-Ops impact: ${sec.operational_impact}
-User impact: ${sec.user_impact}`}]
+          messages:[{role:'user',content:'Title: '+sec.title+'\nBody: '+sec.body+'\nOps impact: '+sec.operational_impact+'\nUser impact: '+sec.user_impact}]
         })
       });
       const data=await res.json();
       const raw=data.content?.find(b=>b.type==='text')?.text||'{}';
-      const result=JSON.parse(raw.replace(/\`\`\`json|\`\`\`/g,'').trim());
+      const result=JSON.parse(raw.replace(/```json|```/g,'').trim());
       Object.assign(monthlyResult.sections[idx],result);
       renderMonthlyOutput(monthlyResult);
     }catch(e){alert('Rewrite failed.');}
@@ -1431,21 +1425,14 @@ ${r.intro||''}
 
 `;
     (r.sections||[]).forEach(s=>{
-      text+=`${s.title||''}
-${s.body||''}
-`;
-      if(s.operational_impact) text+=`  Operational impact: ${s.operational_impact}
-`;
-      if(s.user_impact) text+=`  User impact: ${s.user_impact}
-`;
-      text+='
-';
+      text+=(s.title||'')+'\n'+(s.body||'')+'\n';
+      if(s.operational_impact) text+='  Operational impact: '+(s.operational_impact||'')+'\n';
+      if(s.user_impact) text+='  User impact: '+(s.user_impact||'')+'\n';
+      text+='\n';
     });
-    if(r.closing) text+=`${r.closing}
-`;
-    if(r.cta) text+=`
-${r.cta}`;
-    return text.trim();
+    if(r.closing) text+=(r.closing||'')+'\n';
+    if(r.cta) text+='\n'+(r.cta||'');
+        return text.trim();
   }
 
   function copyMonthlyText(){ navigator.clipboard.writeText(buildMonthlyText()).then(()=>{const btn=event.target;btn.textContent='✓ Copied';setTimeout(()=>{btn.textContent='⎘ Copy';},2000);}); }
