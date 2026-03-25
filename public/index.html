@@ -36,9 +36,45 @@
   .login-input::placeholder { color: #c4c9d4; }
   .otp-input { letter-spacing: 10px; font-size: 24px; text-align: center; font-weight: 700; }
 
+  /* Tabs */
+  .tab-bar { background: #fff; border-bottom: 1px solid #ebebef; padding: 0 40px; display: flex; gap: 0; }
+  .tab-btn { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; color: #6b7280; background: none; border: none; border-bottom: 2px solid transparent; padding: 16px 20px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .tab-btn:hover { color: #37b6bb; }
+  .tab-btn.active { color: #37b6bb; border-bottom-color: #37b6bb; font-weight: 600; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: flex; flex-direction: column; }
+
   /* App */
   .app-screen { display: none; max-width: 1040px; margin: 0 auto; padding: 36px 28px 60px; gap: 20px; }
-  .app-screen.visible { display: flex; flex-direction: column; }
+  .app-screen.visible { display: flex; flex-direction: column; gap: 0; padding: 0; }
+
+  /* Monthly */
+  .monthly-form-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+  .monthly-output { display: flex; flex-direction: column; gap: 20px; }
+  .monthly-hero { background: linear-gradient(135deg, #0f766e 0%, #37b6bb 100%); border-radius: 16px; padding: 36px 40px; color: #fff; }
+  .monthly-hero-month { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.8; margin-bottom: 8px; }
+  .monthly-hero-title { font-size: 28px; font-weight: 700; line-height: 1.2; margin-bottom: 12px; }
+  .monthly-hero-tagline { font-size: 16px; opacity: 0.85; font-style: italic; margin-bottom: 20px; }
+  .monthly-hero-intro { font-size: 14px; line-height: 1.7; opacity: 0.92; }
+  .monthly-section-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 24px 28px; }
+  .monthly-section-card.editing { border-color: #37b6bb; box-shadow: 0 0 0 3px rgba(55,182,187,0.1); }
+  .monthly-section-title { font-size: 17px; font-weight: 700; color: #111827; margin-bottom: 12px; line-height: 1.4; }
+  .monthly-section-body { font-size: 14px; line-height: 1.75; color: #374151; margin-bottom: 16px; }
+  .monthly-impact-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .monthly-impact-box { background: #f9fafb; border-radius: 10px; padding: 14px 16px; }
+  .monthly-impact-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+  .monthly-impact-label.ops { color: #37b6bb; }
+  .monthly-impact-label.user { color: #7c3aed; }
+  .monthly-impact-text { font-size: 13px; line-height: 1.6; color: #4b5563; }
+  .monthly-closing { background: #f0fdfc; border: 1px solid #99e6ea; border-radius: 14px; padding: 24px 28px; }
+  .monthly-closing-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #0f766e; margin-bottom: 10px; }
+  .monthly-closing-text { font-size: 14px; line-height: 1.75; color: #134e4a; margin-bottom: 12px; }
+  .monthly-cta { font-size: 13px; color: #6b7280; font-style: italic; }
+  .monthly-section-actions { display: flex; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid #f3f4f6; opacity: 0; transition: opacity 0.15s; }
+  .monthly-section-card:hover .monthly-section-actions { opacity: 1; }
+  .monthly-edit-field { width: 100%; font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.7; color: #111827; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 12px; outline: none; resize: vertical; transition: border-color 0.15s; }
+  .monthly-edit-field:focus { border-color: #37b6bb; box-shadow: 0 0 0 3px rgba(55,182,187,0.1); }
+  .monthly-edit-title { font-size: 16px; font-weight: 600; margin-bottom: 10px; }
 
   /* Form card */
   .form-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
@@ -267,6 +303,14 @@
 
 <!-- APP -->
 <div class="app-screen" id="appScreen">
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('csm')" id="tab-csm">CSM Release Notes</button>
+    <button class="tab-btn" onclick="switchTab('monthly')" id="tab-monthly">Monthly Product Update</button>
+  </div>
+
+  <!-- CSM Tab -->
+  <div class="tab-panel active" id="panel-csm" style="max-width:1040px;margin:0 auto;width:100%;padding:36px 28px 60px;gap:20px;">
   <div class="form-card">
     <div class="form-card-header">
       <div>
@@ -320,6 +364,49 @@
 
   <div class="steps-box" id="stepsBox"><div class="steps-title">Processing</div><div id="stepsContent"></div></div>
   <div class="output-area" id="outputArea"></div>
+  </div><!-- end panel-csm -->
+
+  <!-- Monthly Tab -->
+  <div class="tab-panel" id="panel-monthly" style="max-width:1040px;margin:0 auto;width:100%;padding:36px 28px 60px;gap:20px;display:none;flex-direction:column;">
+
+    <div class="monthly-form-card">
+      <div class="form-card-header">
+        <div>
+          <div class="form-card-title">Monthly Product Update</div>
+          <div class="form-card-desc">Enter PP, VTECH, or DEVOPS ticket IDs — the tool resolves them all</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 200px;gap:16px;align-items:start;">
+        <div class="field">
+          <label>Tickets (PP, VTECH, or DEVOPS — mix freely)</label>
+          <div id="monthlyTicketInputs">
+            <div class="multi-ticket-row"><input type="text" class="monthly-ticket-input" placeholder="PP-1225 or VTECH-5297 or DEVOPS-458" /></div>
+          </div>
+          <button class="add-ticket-btn" onclick="addMonthlyTicket()">+ Add ticket</button>
+        </div>
+        <div class="field">
+          <label>Month</label>
+          <input type="text" id="monthlyMonth" placeholder="March 2026" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" id="monthlyGenerateBtn" onclick="generateMonthly()">
+          <span id="monthlyBtnText">Generate Monthly Update</span>
+          <span id="monthlySpinner" class="spinner" style="display:none"></span>
+        </button>
+        <div id="monthlyErrorMsg" style="font-size:13px;color:#dc2626;display:none;padding:8px 12px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca;"></div>
+      </div>
+    </div>
+
+    <div class="steps-box" id="monthlyStepsBox" style="display:none;">
+      <div class="steps-title">Processing</div>
+      <div id="monthlyStepsContent"></div>
+    </div>
+
+    <div id="monthlyOutput" style="display:none;flex-direction:column;gap:16px;"></div>
+
+  </div><!-- end panel-monthly -->
+
 </div>
 
 <!-- EDIT MODAL -->
@@ -1193,6 +1280,265 @@ Bullets: ${bullets.join(' | ')}`}]
       }, 300);
     }
     setTimeout(()=>URL.revokeObjectURL(url), 10000);
+  }
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  function switchTab(tab){
+    document.getElementById('panel-csm').style.display = tab==='csm'?'flex':'none';
+    document.getElementById('panel-monthly').style.display = tab==='monthly'?'flex':'none';
+    document.getElementById('tab-csm').classList.toggle('active', tab==='csm');
+    document.getElementById('tab-monthly').classList.toggle('active', tab==='monthly');
+  }
+
+  // ── Monthly generation ────────────────────────────────────────────────────
+  let monthlyResult = null;
+
+  function addMonthlyTicket(){
+    const row=document.createElement('div'); row.className='multi-ticket-row';
+    row.innerHTML=`<input type="text" class="monthly-ticket-input" placeholder="PP-XXXX or VTECH-XXXX or DEVOPS-XXX" /><button class="remove-ticket-btn" onclick="this.parentElement.remove()">✕</button>`;
+    document.getElementById('monthlyTicketInputs').appendChild(row);
+  }
+
+  function renderMonthlySteps(steps, ai){
+    const box=document.getElementById('monthlyStepsBox'); box.style.display='block';
+    document.getElementById('monthlyStepsContent').innerHTML=steps.map((s,i)=>`<div class="step-item ${i<ai?'done':i===ai?'active':''}"><div class="step-dot"></div><span>${s}</span></div>`).join('');
+  }
+
+  async function generateMonthly(){
+    const tickets=Array.from(document.querySelectorAll('.monthly-ticket-input')).map(i=>i.value.trim()).filter(Boolean);
+    const month=document.getElementById('monthlyMonth').value.trim();
+    const errEl=document.getElementById('monthlyErrorMsg');
+    errEl.style.display='none';
+    if(!tickets.length){errEl.textContent='Please enter at least one ticket.';errEl.style.display='block';return;}
+    const btn=document.getElementById('monthlyGenerateBtn');
+    btn.disabled=true;
+    document.getElementById('monthlyBtnText').textContent='Generating...';
+    document.getElementById('monthlySpinner').style.display='inline-block';
+    document.getElementById('monthlyOutput').style.display='none';
+    const steps=['Resolving tickets...','Fetching content from Jira...','Building narrative...','Generating monthly update...'];
+    let si=0; renderMonthlySteps(steps,si);
+    const timer=setInterval(()=>{si=Math.min(si+1,steps.length-1);renderMonthlySteps(steps,si);},2000);
+    try{
+      const res=await fetch('/api/monthly',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:currentUser,tickets,month})});
+      clearInterval(timer); renderMonthlySteps(steps,steps.length);
+      let data; try{data=await res.json();}catch(e){errEl.textContent='Server error — please contact deven@voiro.com';errEl.style.display='block';return;}
+      if(!res.ok||!data.result){errEl.textContent=data.error||'Something went wrong.';errEl.style.display='block';return;}
+      monthlyResult=data.result;
+      renderMonthlyOutput(monthlyResult);
+    }catch(err){clearInterval(timer);errEl.textContent='Network error: '+err.message;errEl.style.display='block';}
+    finally{btn.disabled=false;document.getElementById('monthlyBtnText').textContent='Generate Monthly Update';document.getElementById('monthlySpinner').style.display='none';}
+  }
+
+  function renderMonthlyOutput(r){
+    const out=document.getElementById('monthlyOutput');
+    out.innerHTML='';
+
+    // Hero card
+    const hero=document.createElement('div'); hero.className='monthly-hero';
+    hero.innerHTML=`
+      <div class="monthly-hero-month">${r.month||''}</div>
+      <div class="monthly-hero-title" contenteditable="true" oninput="monthlyResult.month=this.textContent">${r.month||''}</div>
+      <div class="monthly-hero-tagline" contenteditable="true" oninput="monthlyResult.tagline=this.textContent">${r.tagline||''}</div>
+      <div class="monthly-hero-intro" contenteditable="true" oninput="monthlyResult.intro=this.textContent">${r.intro||''}</div>`;
+    out.appendChild(hero);
+
+    // Action bar
+    const actionBar=document.createElement('div'); actionBar.className='output-topbar';
+    actionBar.innerHTML=`
+      <div class="output-meta">
+        <span class="chip">${(r.sections||[]).length} updates</span>
+        <span class="chip">${r.month||''}</span>
+      </div>
+      <div class="output-actions">
+        <button class="btn-secondary" onclick="copyMonthlyText()">⎘ Copy</button>
+        <button class="btn-secondary" onclick="copyMonthlyEmail()">✉ Copy for Email</button>
+        <button class="btn-secondary" onclick="downloadMonthlyPDF()">⬇ PDF</button>
+        <button class="btn-secondary" onclick="exportMonthlyGoogleDoc()">⬇ Google Doc</button>
+      </div>`;
+    out.appendChild(actionBar);
+
+    // Sections
+    (r.sections||[]).forEach((sec,idx)=>{
+      const card=document.createElement('div'); card.className='monthly-section-card';
+      card.innerHTML=`
+        <div class="monthly-section-title" contenteditable="true" oninput="monthlyResult.sections[${idx}].title=this.textContent">${sec.title||''}</div>
+        <div class="monthly-section-body" contenteditable="true" oninput="monthlyResult.sections[${idx}].body=this.textContent">${sec.body||''}</div>
+        <div class="monthly-impact-row">
+          <div class="monthly-impact-box">
+            <div class="monthly-impact-label ops">Operational Impact</div>
+            <div class="monthly-impact-text" contenteditable="true" oninput="monthlyResult.sections[${idx}].operational_impact=this.textContent">${sec.operational_impact||''}</div>
+          </div>
+          <div class="monthly-impact-box">
+            <div class="monthly-impact-label user">User Impact</div>
+            <div class="monthly-impact-text" contenteditable="true" oninput="monthlyResult.sections[${idx}].user_impact=this.textContent">${sec.user_impact||''}</div>
+          </div>
+        </div>
+        <div class="monthly-section-actions">
+          <button class="btn-secondary" style="font-size:12px;" onclick="aiRewriteMonthlySection(${idx})">✦ Rewrite with AI</button>
+          <button class="btn-secondary" style="font-size:12px;color:#dc2626;border-color:#fecaca;" onclick="deleteMonthlySection(${idx})">✕ Remove</button>
+        </div>`;
+      out.appendChild(card);
+    });
+
+    // Closing
+    const closing=document.createElement('div'); closing.className='monthly-closing';
+    closing.innerHTML=`
+      <div class="monthly-closing-label">Overall Impact</div>
+      <div class="monthly-closing-text" contenteditable="true" oninput="monthlyResult.closing=this.textContent">${r.closing||''}</div>
+      <div class="monthly-cta" contenteditable="true" oninput="monthlyResult.cta=this.textContent">${r.cta||''}</div>`;
+    out.appendChild(closing);
+
+    out.style.display='flex';
+  }
+
+  function deleteMonthlySection(idx){
+    if(confirm('Remove this section?')){ monthlyResult.sections.splice(idx,1); renderMonthlyOutput(monthlyResult); }
+  }
+
+  async function aiRewriteMonthlySection(idx){
+    const sec=monthlyResult.sections[idx];
+    const btn=event.target; btn.disabled=true; btn.textContent='✦ Rewriting...';
+    try{
+      const res=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',max_tokens:600,
+          system:'Rewrite this monthly product update section. Keep all facts. Improve clarity, make it more strategic and narrative. No marketing language. Return ONLY JSON: {"title":"...","body":"...","operational_impact":"...","user_impact":"..."}',
+          messages:[{role:'user',content:`Title: ${sec.title}
+Body: ${sec.body}
+Ops impact: ${sec.operational_impact}
+User impact: ${sec.user_impact}`}]
+        })
+      });
+      const data=await res.json();
+      const raw=data.content?.find(b=>b.type==='text')?.text||'{}';
+      const result=JSON.parse(raw.replace(/\`\`\`json|\`\`\`/g,'').trim());
+      Object.assign(monthlyResult.sections[idx],result);
+      renderMonthlyOutput(monthlyResult);
+    }catch(e){alert('Rewrite failed.');}
+    finally{if(btn){btn.disabled=false;btn.textContent='✦ Rewrite with AI';}}
+  }
+
+  function buildMonthlyText(){
+    if(!monthlyResult) return '';
+    const r=monthlyResult;
+    let text=`${r.month||''}
+${r.tagline||''}
+${'─'.repeat(50)}
+
+${r.intro||''}
+
+`;
+    (r.sections||[]).forEach(s=>{
+      text+=`${s.title||''}
+${s.body||''}
+`;
+      if(s.operational_impact) text+=`  Operational impact: ${s.operational_impact}
+`;
+      if(s.user_impact) text+=`  User impact: ${s.user_impact}
+`;
+      text+='
+';
+    });
+    if(r.closing) text+=`${r.closing}
+`;
+    if(r.cta) text+=`
+${r.cta}`;
+    return text.trim();
+  }
+
+  function copyMonthlyText(){ navigator.clipboard.writeText(buildMonthlyText()).then(()=>{const btn=event.target;btn.textContent='✓ Copied';setTimeout(()=>{btn.textContent='⎘ Copy';},2000);}); }
+  function copyMonthlyEmail(){
+    const r=monthlyResult; if(!r) return;
+    const text=`Subject: ${r.month} Product Update — ${r.tagline}
+
+${buildMonthlyText()}`;
+    navigator.clipboard.writeText(text).then(()=>{const btn=event.target;btn.textContent='✓ Copied';setTimeout(()=>{btn.textContent='✉ Copy for Email';},2000);});
+  }
+
+  function downloadMonthlyPDF(){
+    if(!monthlyResult) return;
+    const r=monthlyResult;
+    const doc=new jsPDF({unit:'pt',format:'a4'});
+    const W=595,ML=56,MR=56,CW=W-ML-MR;
+    const TEAL=[55,182,187],DARK=[40,40,50],MID=[90,90,105],LIGHT=[155,155,170],BORDER=[225,225,230],WHITE=[255,255,255],BGTEAL=[240,253,252],BGPURP=[245,243,255];
+    const today=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+
+    function addMonthlyHeader(){ doc.setFillColor(...TEAL);doc.rect(0,0,W,76,'F');doc.setFont('helvetica','bold');doc.setFontSize(22);doc.setTextColor(255,255,255);doc.text('Voiro',ML,46);const vw=doc.getTextWidth('Voiro');doc.setFont('helvetica','normal');doc.setFontSize(14);doc.setTextColor(220,248,248);doc.text(' Release Notes',ML+vw+6,46);doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(200,245,245);doc.text(today,W-MR,56,{align:'right'}); }
+    function addMonthlyFooter(p,t){ doc.setDrawColor(...BORDER);doc.setLineWidth(0.5);doc.line(ML,822,W-MR,822);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...LIGHT);doc.text('Confidential — Voiro Technologies',ML,834);doc.text(`Page ${p} of ${t}`,W-MR,834,{align:'right'}); }
+    function checkY(y,h){ if(y+h>810){doc.addPage();addMonthlyHeader();return 96;}return y; }
+
+    addMonthlyHeader();
+    let y=96;
+
+    // Month + tagline hero block
+    doc.setFillColor(...TEAL);doc.roundedRect(ML,y,CW,80,6,6,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(220,248,248);doc.text((r.month||'').toUpperCase(),ML+16,y+18);
+    doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(255,255,255);
+    const tagLines=doc.splitTextToSize(r.tagline||'',CW-32);doc.text(tagLines,ML+16,y+36);
+    y+=94;
+
+    // Intro
+    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(...MID);
+    const introLines=doc.splitTextToSize(r.intro||'',CW);
+    y=checkY(y,introLines.length*14+16);
+    doc.text(introLines,ML,y);y+=introLines.length*14+24;
+
+    // Sections
+    (r.sections||[]).forEach(sec=>{
+      const titleL=doc.splitTextToSize(sec.title||'',CW-16);
+      doc.setFont('helvetica','bold');doc.setFontSize(11);
+      const bodyL=doc.splitTextToSize(sec.body||'',CW-16);
+      doc.setFont('helvetica','normal');doc.setFontSize(9.5);
+      const opsL=doc.splitTextToSize(sec.operational_impact||'',CW/2-20);
+      const usrL=doc.splitTextToSize(sec.user_impact||'',CW/2-20);
+      const impactH=Math.max(opsL.length,usrL.length)*13+28;
+      const cardH=14+titleL.length*16+8+bodyL.length*14+12+impactH+14;
+      y=checkY(y,cardH);
+      doc.setFillColor(...WHITE);doc.setDrawColor(...BORDER);doc.setLineWidth(0.5);doc.roundedRect(ML,y,CW,cardH,4,4,'FD');
+      doc.setFillColor(...TEAL);doc.rect(ML,y,3,cardH,'F');
+      let cy=y+14;
+      doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(...DARK);doc.text(titleL,ML+12,cy);cy+=titleL.length*16+8;
+      doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...MID);doc.text(bodyL,ML+12,cy);cy+=bodyL.length*14+12;
+      // Impact boxes
+      const halfW=(CW-16)/2;
+      doc.setFillColor(...BGTEAL);doc.roundedRect(ML+12,cy,halfW,impactH,3,3,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...TEAL);doc.text('OPERATIONAL IMPACT',ML+18,cy+12);
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(...MID);doc.text(opsL,ML+18,cy+22);
+      doc.setFillColor(...BGPURP);doc.roundedRect(ML+12+halfW+4,cy,halfW,impactH,3,3,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(124,58,237);doc.text('USER IMPACT',ML+12+halfW+10,cy+12);
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(...MID);doc.text(usrL,ML+12+halfW+10,cy+22);
+      y+=cardH+12;
+    });
+
+    // Closing
+    y=checkY(y,80);
+    doc.setFillColor(...BGTEAL);doc.setDrawColor(153,230,234);doc.setLineWidth(0.5);doc.roundedRect(ML,y,CW,70,4,4,'FD');
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...TEAL);doc.text('OVERALL IMPACT',ML+14,y+14);
+    doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(20,78,74);
+    const closingL=doc.splitTextToSize(r.closing||'',CW-28);doc.text(closingL,ML+14,y+26);
+    y+=80;
+
+    const pc=doc.internal.getNumberOfPages();
+    for(let i=1;i<=pc;i++){doc.setPage(i);addMonthlyFooter(i,pc);}
+    doc.save(`Voiro_Monthly_Update_${(r.month||'').replace(' ','_')}.pdf`);
+  }
+
+  function exportMonthlyGoogleDoc(){
+    if(!monthlyResult) return;
+    const r=monthlyResult;
+    let html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;max-width:750px;margin:40px auto;color:#111827;font-size:14px;line-height:1.7;}h1{font-size:26px;color:#0f766e;border-bottom:2px solid #37b6bb;padding-bottom:10px;margin-bottom:4px;}h2{font-size:14px;color:#6b7280;margin-bottom:24px;font-weight:400;font-style:italic;}h3{font-size:17px;font-weight:700;color:#111827;margin:28px 0 8px;}p{color:#374151;margin:0 0 12px;}.impact{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}.impact-box{padding:14px 16px;border-radius:6px;}.ops{background:#f0fdfc;border-left:3px solid #37b6bb;}.usr{background:#f5f3ff;border-left:3px solid #7c3aed;}.impact-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}.ops .impact-label{color:#0f766e;}.usr .impact-label{color:#7c3aed;}.impact-text{font-size:13px;color:#4b5563;}.closing{background:#f0fdfc;border-left:4px solid #37b6bb;padding:16px 20px;border-radius:4px;margin-top:28px;}.cta{font-size:13px;color:#6b7280;font-style:italic;margin-top:20px;}</style></head><body>`;
+    html+=`<h1>${r.month||''}</h1><h2>${r.tagline||''}</h2><p>${r.intro||''}</p>`;
+    (r.sections||[]).forEach(s=>{
+      html+=`<h3>${s.title||''}</h3><p>${s.body||''}</p><div class="impact"><div class="impact-box ops"><div class="impact-label">Operational Impact</div><div class="impact-text">${s.operational_impact||''}</div></div><div class="impact-box usr"><div class="impact-label">User Impact</div><div class="impact-text">${s.user_impact||''}</div></div></div>`;
+    });
+    html+=`<div class="closing"><p>${r.closing||''}</p></div><p class="cta">${r.cta||''}</p></body></html>`;
+    const blob=new Blob([html],{type:'text/html'});
+    const url=URL.createObjectURL(blob);
+    const w=window.open(url,'_blank');
+    if(w){setTimeout(()=>{const banner=w.document.createElement('div');banner.style.cssText='position:fixed;top:0;left:0;right:0;background:#37b6bb;color:#fff;padding:12px 20px;font-family:Arial,sans-serif;font-size:13px;z-index:9999;display:flex;align-items:center;justify-content:space-between;';banner.innerHTML='<span>Press <strong>Ctrl+A</strong> then copy and paste into Google Docs to import.</span><button onclick="this.parentElement.remove()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:4px 10px;border-radius:4px;cursor:pointer;">✕</button>';w.document.body.insertBefore(banner,w.document.body.firstChild);},300);}
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
   }
 </script>
 </body>
