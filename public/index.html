@@ -180,10 +180,40 @@
   .summary-edit-btn { font-size: 12px; color: #0f766e; background: none; border: 1px solid #99e6ea; border-radius: 6px; padding: 3px 10px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; }
   .summary-edit-btn:hover { background: #37b6bb; color: #fff; border-color: #37b6bb; }
   /* Beta badge */
-  .beta-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #7c3aed; background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 4px; padding: 2px 7px; margin-left: 6px; }
-  .beta-toggle-btn { font-size: 11px; background: none; border: 1px solid #e5e7eb; border-radius: 5px; padding: 3px 8px; cursor: pointer; color: #9ca3af; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+  .beta-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #7c3aed; background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 4px; padding: 2px 7px; margin-left: 8px; white-space: nowrap; vertical-align: middle; }
+  .beta-toggle-btn { font-size: 11px; background: none; border: 1px solid #e5e7eb; border-radius: 5px; padding: 3px 8px; cursor: pointer; color: #9ca3af; font-family: 'Inter', sans-serif; transition: all 0.15s; white-space: nowrap; }
   .beta-toggle-btn:hover { border-color: #7c3aed; color: #7c3aed; background: #f5f3ff; }
   .beta-toggle-btn.active { background: #f5f3ff; border-color: #ddd6fe; color: #7c3aed; font-weight: 600; }
+  /* No-client export toggle */
+  .export-group { display: flex; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+  .export-group-label { font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; padding: 0 8px; background: #f9fafb; border-right: 1px solid #e5e7eb; }
+  .export-group .btn-secondary { border: none; border-radius: 0; border-right: 1px solid #e5e7eb; }
+  .export-group .btn-secondary:last-child { border-right: none; }
+  .export-alt { font-size: 11px; color: #9ca3af; padding: 8px 10px; }
+  .export-alt:hover { color: #7c3aed !important; background: #f5f3ff !important; }
+  /* AI rewrite */
+  .ai-rewrite-btn { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; background: #f0fdfc; color: #0f766e; border: 1px solid #99e6ea; border-radius: 8px; padding: 7px 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s; width: 100%; margin-top: 8px; }
+  .ai-rewrite-btn:hover { background: #37b6bb; color: #fff; border-color: #37b6bb; }
+  .ai-rewrite-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  /* Image upload */
+  .img-upload-area { border: 1.5px dashed #e5e7eb; border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.15s; margin-top: 4px; }
+  .img-upload-area:hover { border-color: #37b6bb; background: #f0fdfc; }
+  .img-upload-area input { display: none; }
+  .img-preview { max-width: 100%; max-height: 160px; border-radius: 6px; margin-top: 8px; display: block; }
+  .img-url-row { display: flex; gap: 8px; margin-top: 8px; }
+  .img-url-row input { flex: 1; }
+  /* Note card image */
+  .note-image { max-width: 100%; border-radius: 8px; margin-top: 12px; display: block; }
+  /* Multiple tickets */
+  .multi-ticket-row { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+  .multi-ticket-row input { flex: 1; }
+  .remove-ticket-btn { background: none; border: 1px solid #fecaca; border-radius: 6px; color: #dc2626; padding: 6px 10px; cursor: pointer; font-size: 13px; transition: all 0.15s; }
+  .remove-ticket-btn:hover { background: #fef2f2; }
+  .add-ticket-btn { font-size: 13px; color: #37b6bb; background: none; border: 1px dashed #99e6ea; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 6px; transition: all 0.15s; }
+  .add-ticket-btn:hover { background: #f0fdfc; }
+  /* Merge option */
+  .merge-option { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #f9fafb; border-radius: 8px; margin-top: 10px; font-size: 13px; color: #374151; }
+  .merge-option input[type=checkbox] { width: 15px; height: 15px; accent-color: #37b6bb; }
 
   @keyframes spin { to { transform: rotate(360deg); } }
   .spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
@@ -246,9 +276,17 @@
     </div>
     <div class="form-row">
       <div class="field">
-        <label>DEVOPS Ticket ID or URL</label>
-        <input type="text" id="devopsTicket" placeholder="DEVOPS-458 or paste Jira URL" />
-        <span class="field-hint">Accepts ticket ID or full Jira URL</span>
+        <label>DEVOPS Ticket(s)</label>
+        <div id="ticketInputs">
+          <div class="multi-ticket-row">
+            <input type="text" class="ticket-input" placeholder="DEVOPS-458 or paste Jira URL" />
+          </div>
+        </div>
+        <button class="add-ticket-btn" onclick="addTicketInput()">+ Add another ticket</button>
+        <div class="merge-option">
+          <input type="checkbox" id="mergeTickets" checked />
+          <label for="mergeTickets">Merge all tickets into one release note</label>
+        </div>
       </div>
       <div class="field">
         <label>Client</label>
@@ -288,27 +326,51 @@
 <div class="modal-overlay" id="editModal">
   <div class="modal">
     <div class="modal-title">Edit Release Note</div>
-    <div class="modal-field">
-      <label>Category</label>
-      <select id="editCategory">
-        <option>New Features</option>
-        <option>Improvements</option>
-        <option>Bug Fixes</option>
-        <option>Platform & Performance</option>
-      </select>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="modal-field" style="margin-bottom:0;">
+        <label>Category</label>
+        <select id="editCategory">
+          <option>New Features</option>
+          <option>Improvements</option>
+          <option>Bug Fixes</option>
+          <option>Platform & Performance</option>
+        </select>
+      </div>
+      <div class="modal-field" style="margin-bottom:0;">
+        <label>Client</label>
+        <select id="editClient">
+          <option value="">All Clients</option>
+        </select>
+      </div>
     </div>
-    <div class="modal-field">
+    <div class="modal-field" style="margin-top:16px;">
       <label>Title</label>
       <input type="text" id="editTitle" placeholder="What changed, in plain terms" />
     </div>
     <div class="modal-field">
       <label>Summary</label>
       <textarea id="editSummary" placeholder="2-3 sentences: what changed and what users can now do differently"></textarea>
+      <button class="ai-rewrite-btn" id="aiRewriteBtn" onclick="aiRewrite()">✦ Rewrite with AI</button>
     </div>
     <div class="modal-field">
       <label>Bullet Points</label>
       <div class="bullet-list" id="editBullets"></div>
       <button class="add-bullet-btn" onclick="addBullet()">+ Add bullet</button>
+    </div>
+    <div class="modal-field">
+      <label>Image or GIF (optional)</label>
+      <div class="img-upload-area" onclick="document.getElementById('imgFileInput').click()">
+        <input type="file" id="imgFileInput" accept="image/*,.gif" onchange="handleImageUpload(event)" />
+        <span style="font-size:13px;color:#9ca3af;">Click to upload from computer</span>
+        <img id="imgPreview" class="img-preview" style="display:none;" />
+      </div>
+      <div class="img-url-row">
+        <input type="text" id="imgUrlInput" placeholder="Or paste image / GIF URL" />
+        <button class="btn-secondary" onclick="loadImageUrl()" style="white-space:nowrap;">Load URL</button>
+      </div>
+      <div style="margin-top:6px;">
+        <button class="btn-secondary" onclick="clearImage()" style="font-size:12px;color:#9ca3af;">✕ Remove image</button>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeModal()">Cancel</button>
@@ -495,12 +557,82 @@
   function setLoading(on){document.getElementById('generateBtn').disabled=on;document.getElementById('btnText').textContent=on?'Generating...':'Generate';document.getElementById('btnSpinner').style.display=on?'inline-block':'none';}
   function renderSteps(steps,ai){const box=document.getElementById('stepsBox');box.classList.add('visible');const content=document.getElementById('stepsContent')||box;content.innerHTML=steps.map((s,i)=>`<div class="step-item ${i<ai?'done':i===ai?'active':''}"><div class="step-dot"></div><span>${s}</span></div>`).join('');}
 
+  function addTicketInput(){
+    const row=document.createElement('div'); row.className='multi-ticket-row';
+    row.innerHTML=`<input type="text" class="ticket-input" placeholder="DEVOPS-XXX or paste Jira URL" /><button class="remove-ticket-btn" onclick="this.parentElement.remove()">✕</button>`;
+    document.getElementById('ticketInputs').appendChild(row);
+  }
+
+  function getTicketIds(){
+    return Array.from(document.querySelectorAll('.ticket-input'))
+      .map(i=>extractTicketId(i.value.trim()))
+      .filter(t=>t&&t.startsWith('DEVOPS'));
+  }
+
+  async function aiRewrite(){
+    const title=document.getElementById('editTitle').value.trim();
+    const summary=document.getElementById('editSummary').value.trim();
+    const bullets=Array.from(document.querySelectorAll('#editBullets input')).map(i=>i.value.trim()).filter(Boolean);
+    if(!title&&!summary){alert('Please add a title or summary first.');return;}
+    const btn=document.getElementById('aiRewriteBtn');
+    btn.disabled=true; btn.textContent='✦ Rewriting...';
+    try{
+      const res=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:800,
+          system:'You are rewriting a single release note entry. Keep the same factual information. Improve clarity and make it more readable for non-technical media planners. Keep the same structure. No marketing language, no fancy words. Return ONLY a JSON object: {"title":"...","summary":"...","bullets":["...","..."]}',
+          messages:[{role:'user',content:`Rewrite this release note:
+Title: ${title}
+Summary: ${summary}
+Bullets: ${bullets.join(' | ')}`}]
+        })
+      });
+      const data=await res.json();
+      const raw=data.content?.find(b=>b.type==='text')?.text||'{}';
+      const clean=raw.replace(/\`\`\`json|\`\`\`/g,'').trim();
+      const result=JSON.parse(clean);
+      if(result.title) document.getElementById('editTitle').value=result.title;
+      if(result.summary) document.getElementById('editSummary').value=result.summary;
+      if(result.bullets&&result.bullets.length) renderBullets(result.bullets);
+    }catch(e){alert('AI rewrite failed. Please try again.');}
+    finally{btn.disabled=false;btn.textContent='✦ Rewrite with AI';}
+  }
+
+  let currentImageData=null;
+  function handleImageUpload(e){
+    const file=e.target.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      currentImageData=ev.target.result;
+      const preview=document.getElementById('imgPreview');
+      preview.src=currentImageData; preview.style.display='block';
+    };
+    reader.readAsDataURL(file);
+  }
+  function loadImageUrl(){
+    const url=document.getElementById('imgUrlInput').value.trim();
+    if(!url) return;
+    currentImageData=url;
+    const preview=document.getElementById('imgPreview');
+    preview.src=url; preview.style.display='block';
+  }
+  function clearImage(){
+    currentImageData=null;
+    document.getElementById('imgPreview').style.display='none';
+    document.getElementById('imgPreview').src='';
+    document.getElementById('imgFileInput').value='';
+    document.getElementById('imgUrlInput').value='';
+  }
+
   async function generate(){
-    const rawInput=document.getElementById('devopsTicket').value.trim();
-    const devopsTicket=extractTicketId(rawInput);
+    const ticketIds=getTicketIds();
+    const merge=document.getElementById('mergeTickets').checked;
     const clientFilter=msState.client, statusFilter=msState.status;
     hideError();
-    if(!devopsTicket||!devopsTicket.startsWith('DEVOPS')){showError('Please enter a valid DEVOPS ticket ID or URL.');return;}
+    if(ticketIds.length===0){showError('Please enter at least one valid DEVOPS ticket ID or URL.');return;}
     if(clientFilter.length===0){showError('Please select at least one client.');return;}
     if(statusFilter.length===0){showError('Please select at least one status.');return;}
     setLoading(true);
@@ -511,15 +643,37 @@
     let si=0; renderSteps(progressSteps,si);
     const timer=setInterval(()=>{si=Math.min(si+1,progressSteps.length-1);renderSteps(progressSteps,si);},1800);
     try{
-      const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:currentUser,devopsTicket,clientFilter,statusFilter,allClientOptions:window._clientOptions||[]})});
-      clearInterval(timer);renderSteps(progressSteps,progressSteps.length);
-      let data; try{data=await res.json();}catch(e){showError('Server error — please check Vercel logs or contact deven@voiro.com');return;}
-      if(!res.ok){showError(data.error||'Something went wrong.');return;}
-      if(data.empty||!data.notes?.length){document.getElementById('outputArea').innerHTML=`<div class="empty-msg"><div class="empty-icon">🔍</div>No tickets found matching your filters on ${devopsTicket}.<br>Try adjusting your client or status filters.</div>`;document.getElementById('outputArea').classList.add('visible');return;}
-      currentNotes=data.notes.filter(n=>!n.flag);
-      const clientLabel=clientFilter.length===(window._clientOptions||[]).length?'All Clients':clientFilter.join(', ');
-      currentMeta={client:clientLabel,devopsId:devopsTicket,summary:data.summary||''};
-      renderOutput();
+      if(merge||ticketIds.length===1){
+        // Fetch all tickets and merge
+        const allNotes=[], allSummaries=[];
+        for(const devopsTicket of ticketIds){
+          const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:currentUser,devopsTicket,clientFilter,statusFilter,allClientOptions:window._clientOptions||[]})});
+          let data; try{data=await res.json();}catch(e){continue;}
+          if(res.ok&&data.notes) allNotes.push(...data.notes);
+          if(data.summary) allSummaries.push(data.summary);
+        }
+        clearInterval(timer);renderSteps(progressSteps,progressSteps.length);
+        if(!allNotes.length){document.getElementById('outputArea').innerHTML=`<div class="empty-msg"><div class="empty-icon">🔍</div>No tickets found matching your filters.<br>Try adjusting your client or status filters.</div>`;document.getElementById('outputArea').classList.add('visible');return;}
+        currentNotes=allNotes.filter(n=>!n.flag);
+        const clientLabel=clientFilter.length===(window._clientOptions||[]).length?'All Clients':clientFilter.join(', ');
+        currentMeta={client:clientLabel,devopsId:ticketIds.join(', '),summary:allSummaries.join(' ')};
+        renderOutput();
+      } else {
+        // Separate — generate one at a time, show all
+        const allResults=[];
+        for(const devopsTicket of ticketIds){
+          const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:currentUser,devopsTicket,clientFilter,statusFilter,allClientOptions:window._clientOptions||[]})});
+          let data; try{data=await res.json();}catch(e){continue;}
+          if(res.ok&&data.notes) allResults.push({ticket:devopsTicket,notes:data.notes.filter(n=>!n.flag),summary:data.summary||''});
+        }
+        clearInterval(timer);renderSteps(progressSteps,progressSteps.length);
+        if(!allResults.length){document.getElementById('outputArea').innerHTML=`<div class="empty-msg"><div class="empty-icon">🔍</div>No tickets found.</div>`;document.getElementById('outputArea').classList.add('visible');return;}
+        // Merge all for now — show as one combined doc with ticket IDs in chip
+        currentNotes=allResults.flatMap(r=>r.notes);
+        const clientLabel=clientFilter.length===(window._clientOptions||[]).length?'All Clients':clientFilter.join(', ');
+        currentMeta={client:clientLabel,devopsId:ticketIds.join(' + '),summary:allResults.map(r=>r.summary).filter(Boolean).join(' ')};
+        renderOutput();
+      }
     }catch(err){clearInterval(timer);showError('Network error: '+err.message);}
     finally{setLoading(false);}
   }
@@ -571,8 +725,9 @@
         <button class="btn-secondary" onclick="copyNotes()">⎘ Copy</button>
         <button class="btn-secondary" onclick="copyForEmail()">✉ Copy for Email</button>
         <div class="export-group">
-          <button class="btn-secondary" onclick="downloadPDF(false)">⬇ PDF</button>
-          <button class="btn-secondary export-alt" onclick="downloadPDF(true)" title="Export without client name">No Client</button>
+          <span class="export-group-label">PDF</span>
+          <button class="btn-secondary" onclick="downloadPDF(false)" title="Include client name in PDF">With Client</button>
+          <button class="btn-secondary export-alt" onclick="downloadPDF(true)" title="Remove client name from PDF">Anonymous</button>
         </div>
         <button class="btn-secondary" onclick="downloadDOCX()">⬇ Word</button>
         <button class="btn-secondary" onclick="exportGoogleDoc()">⬇ Google Doc</button>
@@ -628,13 +783,30 @@
   }
 
   // Edit Modal
+  function populateEditClientDropdown(selectedClient){
+    const sel=document.getElementById('editClient');
+    sel.innerHTML='<option value="">All Clients</option>';
+    (window._clientOptions||[]).forEach(c=>{
+      const opt=document.createElement('option');
+      opt.value=c; opt.textContent=c;
+      if(c===selectedClient) opt.selected=true;
+      sel.appendChild(opt);
+    });
+  }
   function openEdit(idx){
     editingIndex=idx;
     const note=currentNotes[idx];
     document.getElementById('editCategory').value=note.category||'Improvements';
     document.getElementById('editTitle').value=note.title||'';
     document.getElementById('editSummary').value=note.summary||note.description||'';
+    populateEditClientDropdown(note.client||'');
     renderBullets(note.bullets||[]);
+    // Restore image
+    currentImageData=note.image||null;
+    const preview=document.getElementById('imgPreview');
+    if(currentImageData){preview.src=currentImageData;preview.style.display='block';}
+    else{preview.style.display='none';}
+    document.getElementById('imgUrlInput').value='';
     document.getElementById('editModal').classList.add('open');
   }
   function openNewEntry(category){
@@ -642,7 +814,9 @@
     document.getElementById('editCategory').value=category;
     document.getElementById('editTitle').value='';
     document.getElementById('editSummary').value='';
+    populateEditClientDropdown('');
     renderBullets(['']);
+    clearImage();
     document.getElementById('editModal').classList.add('open');
   }
   function renderBullets(bullets){
@@ -662,7 +836,8 @@
     const summary=document.getElementById('editSummary').value.trim();
     const bullets=Array.from(document.querySelectorAll('#editBullets input')).map(i=>i.value.trim()).filter(Boolean);
     if(!title){alert('Please enter a title.');return;}
-    const entry={category,title,summary,bullets,flag:false,beta:editingIndex!==null?(currentNotes[editingIndex].beta||false):false,client:editingIndex!==null?currentNotes[editingIndex].client:'',ppKey:editingIndex!==null?currentNotes[editingIndex].ppKey:null};
+    const editClient=document.getElementById('editClient').value;
+    const entry={category,title,summary,bullets,flag:false,beta:editingIndex!==null?(currentNotes[editingIndex].beta||false):false,client:editClient||'',ppKey:editingIndex!==null?currentNotes[editingIndex].ppKey:null,image:currentImageData||null};
     if(editingIndex!==null){currentNotes[editingIndex]=entry;}else{currentNotes.push(entry);}
     closeModal(); renderOutput();
   }
@@ -893,6 +1068,20 @@
             doc.text(bLines, ML+30, cy);
             cy += bLines.length * 13;
           });
+        }
+
+        // Image in PDF
+        if(note.image && note.image.startsWith('data:')){
+          try{
+            const imgY = y - cardH - 10 + cardH - (note.image ? 90 : 0) - 10;
+            // Add image on next available space
+            const imgProps = doc.getImageProperties(note.image);
+            const imgW = Math.min(CW-30, 300);
+            const imgH = (imgProps.height / imgProps.width) * imgW;
+            y = checkPage(y, imgH+16);
+            doc.addImage(note.image, imgProps.fileType||'JPEG', ML+15, y, imgW, imgH);
+            y += imgH + 16;
+          }catch(e){ /* skip if image fails */ }
         }
 
         y += cardH + 10;
