@@ -231,6 +231,19 @@
   .ai-rewrite-btn { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; background: #f0fdfc; color: #0f766e; border: 1px solid #99e6ea; border-radius: 8px; padding: 7px 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s; width: 100%; margin-top: 8px; }
   .ai-rewrite-btn:hover { background: #37b6bb; color: #fff; border-color: #37b6bb; }
   .ai-rewrite-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  /* AI instruction modal */
+  .ai-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(17,24,39,0.5); z-index: 300; align-items: center; justify-content: center; padding: 24px; backdrop-filter: blur(2px); }
+  .ai-modal-overlay.open { display: flex; }
+  .ai-modal { background: #fff; border-radius: 16px; padding: 28px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+  .ai-modal-title { font-size: 16px; font-weight: 700; color: #111827; margin-bottom: 6px; }
+  .ai-modal-sub { font-size: 13px; color: #6b7280; margin-bottom: 20px; }
+  .ai-instruction-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .ai-chip { font-family: 'Inter', sans-serif; font-size: 13px; padding: 7px 14px; border-radius: 20px; border: 1px solid #e5e7eb; background: #f9fafb; color: #374151; cursor: pointer; transition: all 0.15s; }
+  .ai-chip:hover { border-color: #37b6bb; color: #0f766e; background: #f0fdfc; }
+  .ai-chip.selected { border-color: #37b6bb; background: #f0fdfc; color: #0f766e; font-weight: 600; }
+  .ai-custom-input { width: 100%; font-family: 'Inter', sans-serif; font-size: 14px; border: 1px solid #d1d5db; border-radius: 10px; padding: 10px 12px; outline: none; margin-top: 4px; color: #111827; }
+  .ai-custom-input:focus { border-color: #37b6bb; box-shadow: 0 0 0 3px rgba(55,182,187,0.12); }
+  .ai-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #f3f4f6; }
   /* Image upload */
   .img-upload-area { border: 1.5px dashed #e5e7eb; border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.15s; margin-top: 4px; }
   .img-upload-area:hover { border-color: #37b6bb; background: #f0fdfc; }
@@ -376,18 +389,17 @@
           <div class="form-card-desc">Enter PP, VTECH, or DEVOPS ticket IDs — the tool resolves them all</div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 200px;gap:16px;align-items:start;">
-        <div class="field">
-          <label>Tickets (PP, VTECH, or DEVOPS — mix freely)</label>
-          <div id="monthlyTicketInputs">
-            <div class="multi-ticket-row"><input type="text" class="monthly-ticket-input" placeholder="PP-1225 or VTECH-5297 or DEVOPS-458" /></div>
-          </div>
-          <button class="add-ticket-btn" onclick="addMonthlyTicket()">+ Add ticket</button>
+      <div class="field">
+        <label>Tickets <span style="font-weight:400;color:#9ca3af;">— PP, VTECH, or DEVOPS IDs, mix freely</span></label>
+        <div id="monthlyTicketInputs">
+          <div class="multi-ticket-row"><input type="text" class="monthly-ticket-input" placeholder="PP-1225 or VTECH-5297 or DEVOPS-458" /></div>
         </div>
-        <div class="field">
-          <label>Month</label>
-          <input type="text" id="monthlyMonth" placeholder="March 2026" />
-        </div>
+        <button class="add-ticket-btn" onclick="addMonthlyTicket()">+ Add ticket</button>
+      </div>
+      <div class="field" style="margin-top:16px;">
+        <label>Document title <span style="font-weight:400;color:#9ca3af;">— used as the heading of the release note</span></label>
+        <input type="text" id="monthlyMonth" placeholder="e.g. March 2026 Product Update" style="font-family:Inter,sans-serif;font-size:14px;background:#fff;border:1px solid #d1d5db;border-radius:10px;color:#111827;padding:10px 13px;outline:none;width:100%;" />
+        <span class="field-hint">This becomes the title of the document. Leave blank to auto-generate from tickets.</span>
       </div>
       <div class="form-actions">
         <button class="btn-primary" id="monthlyGenerateBtn" onclick="generateMonthly()">
@@ -407,6 +419,30 @@
 
   </div><!-- end panel-monthly -->
 
+</div>
+
+<!-- AI INSTRUCTION MODAL -->
+<div class="ai-modal-overlay" id="aiInstructionModal">
+  <div class="ai-modal">
+    <div class="ai-modal-title">✦ Rewrite with AI</div>
+    <div class="ai-modal-sub">How should this be rewritten?</div>
+    <div class="ai-instruction-chips">
+      <button class="ai-chip" onclick="selectChip(this,'Make it shorter')">Make it shorter</button>
+      <button class="ai-chip" onclick="selectChip(this,'Make it more precise')">More precise</button>
+      <button class="ai-chip" onclick="selectChip(this,'Make it more strategic')">More strategic</button>
+      <button class="ai-chip" onclick="selectChip(this,'Make it more client-friendly')">More client-friendly</button>
+      <button class="ai-chip" onclick="selectChip(this,'Simplify the language')">Simpler language</button>
+      <button class="ai-chip" onclick="selectChip(this,'Make it more impactful')">More impactful</button>
+    </div>
+    <div class="modal-field" style="margin-bottom:0;">
+      <label style="font-size:13px;font-weight:500;color:#374151;margin-bottom:6px;display:block;">Or write your own instruction</label>
+      <input class="ai-custom-input" id="aiCustomInstruction" placeholder="e.g. Focus on the business benefit for media buyers" />
+    </div>
+    <div class="ai-modal-actions">
+      <button class="btn-secondary" onclick="closeAIModal()">Cancel</button>
+      <button class="btn-primary" id="aiModalRewriteBtn" onclick="executeAIRewrite()">Rewrite</button>
+    </div>
+  </div>
 </div>
 
 <!-- EDIT MODAL -->
@@ -519,6 +555,11 @@
       document.getElementById('userPill').classList.add('visible');
       initStatusDropdown();
       loadClientLabels();
+      // Pre-fill monthly title with current month
+      const monthEl = document.getElementById('monthlyMonth');
+      if(monthEl && !monthEl.value) {
+        monthEl.value = new Date().toLocaleString('en-GB', {month:'long', year:'numeric'}) + ' Product Update';
+      }
     }
   });
 
@@ -656,34 +697,122 @@
       .filter(t=>t&&t.startsWith('DEVOPS'));
   }
 
-  async function aiRewrite(){
-    const title=document.getElementById('editTitle').value.trim();
-    const summary=document.getElementById('editSummary').value.trim();
-    const bullets=Array.from(document.querySelectorAll('#editBullets input')).map(i=>i.value.trim()).filter(Boolean);
-    if(!title&&!summary){alert('Please add a title or summary first.');return;}
-    const btn=document.getElementById('aiRewriteBtn');
-    btn.disabled=true; btn.textContent='✦ Rewriting...';
-    try{
-      const res=await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',
-          max_tokens:800,
-          system:'You are rewriting a single release note entry. Keep the same factual information. Improve clarity and make it more readable for non-technical media planners. Keep the same structure. No marketing language, no fancy words. Return ONLY a JSON object: {"title":"...","summary":"...","bullets":["...","..."]}',
-          messages:[{role:'user',content:'Rewrite this release note:\nTitle: '+title+'\nSummary: '+summary+'\nBullets: '+bullets.join(' | ')}]
-        })
-      });
-      const data=await res.json();
-      const raw=data.content?.find(b=>b.type==='text')?.text||'{}';
-      const clean=raw.replace(/```json|```/g,'').trim();
-      const result=JSON.parse(clean);
-      if(result.title) document.getElementById('editTitle').value=result.title;
-      if(result.summary) document.getElementById('editSummary').value=result.summary;
-      if(result.bullets&&result.bullets.length) renderBullets(result.bullets);
-    }catch(e){alert('AI rewrite failed. Please try again.');}
-    finally{btn.disabled=false;btn.textContent='✦ Rewrite with AI';}
+  // AI rewrite state
+  let aiRewriteContext = null; // {type:'csm'|'summary'|'monthly', idx:number|null}
+  let aiSelectedChip = '';
+
+  function selectChip(el, value){
+    document.querySelectorAll('.ai-chip').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+    aiSelectedChip = value;
+    document.getElementById('aiCustomInstruction').value = '';
   }
+
+  function openAIModal(context){
+    aiRewriteContext = context;
+    aiSelectedChip = '';
+    document.querySelectorAll('.ai-chip').forEach(c=>c.classList.remove('selected'));
+    document.getElementById('aiCustomInstruction').value = '';
+    document.getElementById('aiInstructionModal').classList.add('open');
+  }
+
+  function closeAIModal(){
+    document.getElementById('aiInstructionModal').classList.remove('open');
+    aiRewriteContext = null;
+  }
+
+  function getAIInstruction(){
+    const custom = document.getElementById('aiCustomInstruction').value.trim();
+    return custom || aiSelectedChip || 'Improve clarity and readability';
+  }
+
+  async function executeAIRewrite(){
+    const instruction = getAIInstruction();
+    const btn = document.getElementById('aiModalRewriteBtn');
+    btn.disabled=true; btn.textContent='Rewriting...';
+
+    try{
+      const ctx = aiRewriteContext;
+
+      if(ctx.type === 'csm'){
+        // Rewrite CSM note entry
+        const title=document.getElementById('editTitle').value.trim();
+        const summary=document.getElementById('editSummary').value.trim();
+        const bullets=Array.from(document.querySelectorAll('#editBullets input')).map(i=>i.value.trim()).filter(Boolean);
+        const res=await fetch('https://api.anthropic.com/v1/messages',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,
+            system:'You are rewriting a client-facing release note entry for a B2B ad tech platform. Keep all facts. Follow the instruction precisely. No marketing language. Return ONLY JSON: {"title":"...","summary":"...","bullets":["...","..."]}',
+            messages:[{role:'user',content:'Instruction: '+instruction+'\n\nRewrite this:\nTitle: '+title+'\nSummary: '+summary+'\nBullets: '+bullets.join(' | ')}]
+          })
+        });
+        const data=await res.json();
+        const raw=data.content?.find(b=>b.type==='text')?.text||'{}';
+        const result=JSON.parse(raw.replace(/```json|```/g,'').trim());
+        if(result.title) document.getElementById('editTitle').value=result.title;
+        if(result.summary) document.getElementById('editSummary').value=result.summary;
+        if(result.bullets&&result.bullets.length) renderBullets(result.bullets);
+
+      } else if(ctx.type === 'summary'){
+        // Rewrite release summary
+        const current=document.getElementById('summaryEditArea').value||document.getElementById('summaryText').textContent;
+        const res=await fetch('https://api.anthropic.com/v1/messages',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,
+            system:'Rewrite this release summary. Keep it factual and concise. No marketing language. Return ONLY the rewritten text, no JSON, no preamble.',
+            messages:[{role:'user',content:'Instruction: '+instruction+'\n\nSummary to rewrite:\n'+current}]
+          })
+        });
+        const data=await res.json();
+        const result=(data.content?.find(b=>b.type==='text')?.text||'').trim();
+        if(result){
+          currentMeta.summary=result;
+          document.getElementById('summaryText').textContent=result;
+          document.getElementById('summaryEditArea').value=result;
+        }
+
+      } else if(ctx.type === 'monthly'){
+        // Rewrite monthly section
+        const idx=ctx.idx;
+        const sec=monthlyResult.sections[idx];
+        const res=await fetch('https://api.anthropic.com/v1/messages',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,
+            system:'Rewrite this monthly product update section. Keep all facts. Follow the instruction. Strategic, narrative tone. No marketing language. Return ONLY JSON: {"title":"...","body":"...","operational_impact":"...","user_impact":"..."}',
+            messages:[{role:'user',content:'Instruction: '+instruction+'\n\nTitle: '+sec.title+'\nBody: '+sec.body+'\nOps impact: '+sec.operational_impact+'\nUser impact: '+sec.user_impact}]
+          })
+        });
+        const data=await res.json();
+        const raw=data.content?.find(b=>b.type==='text')?.text||'{}';
+        const result=JSON.parse(raw.replace(/```json|```/g,'').trim());
+        Object.assign(monthlyResult.sections[idx],result);
+        renderMonthlyOutput(monthlyResult);
+
+      } else if(ctx.type === 'monthly-summary'){
+        // Rewrite monthly intro/closing
+        const field = ctx.field; // 'intro' or 'closing'
+        const current = monthlyResult[field]||'';
+        const res=await fetch('https://api.anthropic.com/v1/messages',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,
+            system:'Rewrite this product update text. Keep it factual. Strategic tone. No marketing language. Return ONLY the rewritten text.',
+            messages:[{role:'user',content:'Instruction: '+instruction+'\n\nText:\n'+current}]
+          })
+        });
+        const data=await res.json();
+        const result=(data.content?.find(b=>b.type==='text')?.text||'').trim();
+        if(result){
+          monthlyResult[field]=result;
+          renderMonthlyOutput(monthlyResult);
+        }
+      }
+
+      closeAIModal();
+    }catch(e){ alert('AI rewrite failed. Please try again.'); }
+    finally{ btn.disabled=false; btn.textContent='Rewrite'; }
+  }
+
+  function aiRewrite(){ openAIModal({type:'csm'}); }
 
   let currentImageData=null;
   function handleImageUpload(e){
@@ -792,7 +921,10 @@
     sc.innerHTML=`
       <div class="summary-card-header">
         <div class="summary-card-label">Release Summary</div>
-        <button class="summary-edit-btn" id="summaryEditBtn" onclick="toggleSummaryEdit()">✏ Edit</button>
+        <div style="display:flex;gap:8px;">
+          <button class="summary-edit-btn" onclick="openAIModal({type:'summary'})" style="background:#f0fdfc;border-color:#99e6ea;">✦ Rewrite</button>
+          <button class="summary-edit-btn" id="summaryEditBtn" onclick="toggleSummaryEdit()">✏ Edit</button>
+        </div>
       </div>
       <div class="summary-card-text" id="summaryText">${currentMeta.summary||'No summary generated.'}</div>
       <textarea class="summary-edit-area" id="summaryEditArea" placeholder="Write a brief summary of this release...">${currentMeta.summary||''}</textarea>`;
@@ -1285,6 +1417,11 @@
     document.getElementById('panel-monthly').style.display = tab==='monthly'?'flex':'none';
     document.getElementById('tab-csm').classList.toggle('active', tab==='csm');
     document.getElementById('tab-monthly').classList.toggle('active', tab==='monthly');
+    // Pre-fill title if empty
+    if(tab==='monthly'){
+      const el=document.getElementById('monthlyMonth');
+      if(el&&!el.value) el.value=new Date().toLocaleString('en-GB',{month:'long',year:'numeric'})+' Product Update';
+    }
   }
 
   // ── Monthly generation ────────────────────────────────────────────────────
@@ -1336,7 +1473,10 @@
       <div class="monthly-hero-month">${r.month||''}</div>
       <div class="monthly-hero-title" contenteditable="true" oninput="monthlyResult.month=this.textContent">${r.month||''}</div>
       <div class="monthly-hero-tagline" contenteditable="true" oninput="monthlyResult.tagline=this.textContent">${r.tagline||''}</div>
-      <div class="monthly-hero-intro" contenteditable="true" oninput="monthlyResult.intro=this.textContent">${r.intro||''}</div>`;
+      <div class="monthly-hero-intro" contenteditable="true" oninput="monthlyResult.intro=this.textContent">${r.intro||''}</div>
+      <div style="margin-top:12px;">
+        <button onclick="openAIModal({type:'monthly-summary',field:'intro'})" style="font-family:Inter,sans-serif;font-size:12px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:6px;padding:5px 12px;cursor:pointer;">✦ Rewrite intro with AI</button>
+      </div>`;
     out.appendChild(hero);
 
     // Action bar
@@ -1357,6 +1497,22 @@
     // Sections
     (r.sections||[]).forEach((sec,idx)=>{
       const card=document.createElement('div'); card.className='monthly-section-card';
+      card.draggable=true;
+      card.dataset.idx=idx;
+      card.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',idx);card.style.opacity='0.4';});
+      card.addEventListener('dragend',()=>{card.style.opacity='1';});
+      card.addEventListener('dragover',e=>{e.preventDefault();card.style.borderColor='#37b6bb';});
+      card.addEventListener('dragleave',()=>{card.style.borderColor='';});
+      card.addEventListener('drop',e=>{
+        e.preventDefault();card.style.borderColor='';
+        const fromIdx=parseInt(e.dataTransfer.getData('text/plain'));
+        const toIdx=idx;
+        if(fromIdx!==toIdx){
+          const moved=monthlyResult.sections.splice(fromIdx,1)[0];
+          monthlyResult.sections.splice(toIdx,0,moved);
+          renderMonthlyOutput(monthlyResult);
+        }
+      });
       card.innerHTML=`
         <div class="monthly-section-title" contenteditable="true" oninput="monthlyResult.sections[${idx}].title=this.textContent">${sec.title||''}</div>
         <div class="monthly-section-body" contenteditable="true" oninput="monthlyResult.sections[${idx}].body=this.textContent">${sec.body||''}</div>
@@ -1371,6 +1527,7 @@
           </div>
         </div>
         <div class="monthly-section-actions">
+          <span style="font-size:12px;color:#d1d5db;cursor:grab;padding:4px 8px;" title="Drag to reorder">⠿ Drag</span>
           <button class="btn-secondary" style="font-size:12px;" onclick="aiRewriteMonthlySection(${idx})">✦ Rewrite with AI</button>
           <button class="btn-secondary" style="font-size:12px;color:#dc2626;border-color:#fecaca;" onclick="deleteMonthlySection(${idx})">✕ Remove</button>
         </div>`;
@@ -1380,7 +1537,10 @@
     // Closing
     const closing=document.createElement('div'); closing.className='monthly-closing';
     closing.innerHTML=`
-      <div class="monthly-closing-label">Overall Impact</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div class="monthly-closing-label" style="margin-bottom:0;">Overall Impact</div>
+        <button onclick="openAIModal({type:'monthly-summary',field:'closing'})" style="font-family:Inter,sans-serif;font-size:12px;background:none;border:1px solid #99e6ea;color:#0f766e;border-radius:6px;padding:4px 10px;cursor:pointer;">✦ Rewrite with AI</button>
+      </div>
       <div class="monthly-closing-text" contenteditable="true" oninput="monthlyResult.closing=this.textContent">${r.closing||''}</div>
       <div class="monthly-cta" contenteditable="true" oninput="monthlyResult.cta=this.textContent">${r.cta||''}</div>`;
     out.appendChild(closing);
@@ -1392,27 +1552,7 @@
     if(confirm('Remove this section?')){ monthlyResult.sections.splice(idx,1); renderMonthlyOutput(monthlyResult); }
   }
 
-  async function aiRewriteMonthlySection(idx){
-    const sec=monthlyResult.sections[idx];
-    const btn=event.target; btn.disabled=true; btn.textContent='✦ Rewriting...';
-    try{
-      const res=await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',max_tokens:600,
-          system:'Rewrite this monthly product update section. Keep all facts. Improve clarity, make it more strategic and narrative. No marketing language. Return ONLY JSON: {"title":"...","body":"...","operational_impact":"...","user_impact":"..."}',
-          messages:[{role:'user',content:'Title: '+sec.title+'\nBody: '+sec.body+'\nOps impact: '+sec.operational_impact+'\nUser impact: '+sec.user_impact}]
-        })
-      });
-      const data=await res.json();
-      const raw=data.content?.find(b=>b.type==='text')?.text||'{}';
-      const result=JSON.parse(raw.replace(/```json|```/g,'').trim());
-      Object.assign(monthlyResult.sections[idx],result);
-      renderMonthlyOutput(monthlyResult);
-    }catch(e){alert('Rewrite failed.');}
-    finally{if(btn){btn.disabled=false;btn.textContent='✦ Rewrite with AI';}}
-  }
+  function aiRewriteMonthlySection(idx){ openAIModal({type:'monthly', idx}); }
 
   function buildMonthlyText(){
     if(!monthlyResult) return '';
