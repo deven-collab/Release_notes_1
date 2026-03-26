@@ -366,6 +366,10 @@
         </div>
       </div>
     </div>
+    <div class="field" style="margin-top:16px;max-width:220px;">
+      <label>Release Date <span style="font-weight:400;color:#9ca3af;">— shown on the PDF</span></label>
+      <input type="date" id="releaseDate" style="font-family:Inter,sans-serif;font-size:14px;background:#fff;border:1px solid #d1d5db;border-radius:10px;color:#111827;padding:10px 13px;outline:none;width:100%;" />
+    </div>
     <div class="form-actions">
       <button class="btn-primary" id="generateBtn" onclick="generate()">
         <span id="btnText">Generate Release Notes</span>
@@ -869,7 +873,9 @@
         if(!allNotes.length){document.getElementById('outputArea').innerHTML=`<div class="empty-msg"><div class="empty-icon">🔍</div>No tickets found matching your filters.<br>Try adjusting your client or status filters.</div>`;document.getElementById('outputArea').classList.add('visible');return;}
         currentNotes=allNotes.filter(n=>!n.flag);
         const clientLabel=clientFilter.length===(window._clientOptions||[]).length?'All Clients':clientFilter.join(', ');
-        currentMeta={client:clientLabel,devopsId:ticketIds.join(', '),summary:allSummaries.join(' ')};
+        const relDateRaw2=document.getElementById('releaseDate').value;
+        const relDateFmt2=relDateRaw2?new Date(relDateRaw2).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'';
+        currentMeta={client:clientLabel,devopsId:ticketIds.join(', '),summary:allSummaries.join(' '),releaseDate:relDateFmt2};
         renderOutput();
       } else {
         // Separate — generate one at a time, show all
@@ -884,7 +890,9 @@
         // Merge all for now — show as one combined doc with ticket IDs in chip
         currentNotes=allResults.flatMap(r=>r.notes);
         const clientLabel=clientFilter.length===(window._clientOptions||[]).length?'All Clients':clientFilter.join(', ');
-        currentMeta={client:clientLabel,devopsId:ticketIds.join(' + '),summary:allResults.map(r=>r.summary).filter(Boolean).join(' ')};
+        const relDateRaw3=document.getElementById('releaseDate').value;
+        const relDateFmt3=relDateRaw3?new Date(relDateRaw3).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'';
+        currentMeta={client:clientLabel,devopsId:ticketIds.join(' + '),summary:allResults.map(r=>r.summary).filter(Boolean).join(' '),releaseDate:relDateFmt3};
         renderOutput();
       }
     }catch(err){clearInterval(timer);showError('Network error: '+err.message);}
@@ -935,6 +943,7 @@
       <div class="output-meta">
         <span class="chip client">${currentMeta.client}</span>
         <span class="chip">${currentMeta.devopsId}</span>
+        ${currentMeta.releaseDate?`<span class="chip">📅 ${currentMeta.releaseDate}</span>`:''}
         <span class="chip">${count} update${count!==1?'s':''}</span>
       </div>
       <div class="output-actions">
@@ -1106,22 +1115,33 @@
     }
 
     function addHeader(hideClient){
-      // Full-width teal header bar
-      doc.setFillColor(...TEAL); doc.rect(0,0,W,76,'F');
-      // "Voiro" bold
-      doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.setTextColor(255,255,255);
-      doc.text('Voiro',ML,46);
-      // Measure "Voiro" width then place "Release Notes" after with a gap
+      // Full-width teal header bar — taller for cleaner layout
+      doc.setFillColor(...TEAL); doc.rect(0,0,W,84,'F');
+
+      // LEFT: Voiro logo wordmark
+      doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(255,255,255);
+      doc.text('Voiro',ML,38);
       const voiroW = doc.getTextWidth('Voiro');
-      doc.setFont('helvetica','normal'); doc.setFontSize(14); doc.setTextColor(220,248,248);
-      doc.text('Release Notes', ML + voiroW + 6, 46);
-      // Right side
-      if(!hideClient){
-        doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(255,255,255);
-        doc.text(currentMeta.client, W-MR, 38, {align:'right'});
+      // Small "®" style dot separator
+      doc.setFillColor(255,255,255); doc.circle(ML+voiroW+8, 32, 2, 'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(220,248,248);
+      doc.text('Platform Updates',ML+voiroW+16, 38);
+
+      // CENTRE: "Release Notes" large centred title
+      doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(255,255,255);
+      doc.text('Release Notes', W/2, 48, {align:'center'});
+
+      // RIGHT: Client name (if showing) + release date
+      const displayDate = currentMeta.releaseDate || today;
+      if(!hideClient && currentMeta.client && currentMeta.client !== 'All Clients'){
+        doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
+        doc.text(currentMeta.client, W-MR, 34, {align:'right'});
+        doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(200,245,245);
+        doc.text(displayDate, W-MR, 48, {align:'right'});
+      } else {
+        doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(200,245,245);
+        doc.text(displayDate, W-MR, 48, {align:'right'});
       }
-      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(200,245,245);
-      doc.text(today, W-MR, 56, {align:'right'});
     }
 
     function addFooter(pageNum, totalPages){
@@ -1132,13 +1152,13 @@
     }
 
     function checkPage(y, neededH){
-      if(y + neededH > 810){ doc.addPage(); addHeader(hideClient); return 96; }
+      if(y + neededH > 810){ doc.addPage(); addHeader(hideClient); return 104; }
       return y;
     }
 
     // Page 1
     addHeader(hideClient);
-    let y = 96;
+    let y = 104;
 
     // Executive summary block
     if(currentMeta.summary){
@@ -1219,6 +1239,7 @@
         const titleH = titleLines.length * 16;
         const sumH = sumLines.length * 14 + 10;
         const bullH = bulletLineCount > 0 ? bulletLineCount * 13 + 16 : 0;
+        const imgPdfH = (note.image && note.image.startsWith('data:')) ? 0 : 0; // image is outside card now
         const cardH = 16 + clientH + betaH + titleH + sumH + bullH + 16;
 
         y = checkPage(y, cardH);
@@ -1286,21 +1307,22 @@
           });
         }
 
-        // Image in PDF
+        y += cardH + 10;
+
+        // Image in PDF — placed AFTER card, properly below all text
         if(note.image && note.image.startsWith('data:')){
           try{
-            const imgY = y - cardH - 10 + cardH - (note.image ? 90 : 0) - 10;
-            // Add image on next available space
             const imgProps = doc.getImageProperties(note.image);
-            const imgW = Math.min(CW-30, 300);
+            const imgW = Math.min(CW-30, 320);
             const imgH = (imgProps.height / imgProps.width) * imgW;
-            y = checkPage(y, imgH+16);
-            doc.addImage(note.image, imgProps.fileType||'JPEG', ML+15, y, imgW, imgH);
-            y += imgH + 16;
+            y = checkPage(y, imgH+20);
+            // Rounded image container
+            doc.setFillColor(248,248,250); doc.setDrawColor(...BORDER); doc.setLineWidth(0.5);
+            doc.roundedRect(ML, y, CW, imgH+16, 4, 4, 'FD');
+            doc.addImage(note.image, imgProps.fileType||'JPEG', ML+(CW-imgW)/2, y+8, imgW, imgH);
+            y += imgH + 24;
           }catch(e){ /* skip if image fails */ }
         }
-
-        y += cardH + 10;
       });
       y += 12;
     });
