@@ -1188,7 +1188,7 @@
       doc.setDrawColor(...BORDER); doc.setLineWidth(0.5); doc.line(ML,822,W-MR,822);
       doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...LIGHT);
       doc.text('Confidential — Voiro Technologies', ML, 834);
-      doc.text(`${currentMeta.devopsId}  ·  Page ${pageNum} of ${totalPages}`, W-MR, 834, {align:'right'});
+      doc.text('Page ' + pageNum + ' of ' + totalPages, W-MR, 834, {align:'right'});
     }
 
     function checkPage(y, neededH){
@@ -1326,7 +1326,7 @@
         doc.setTextColor(...badgeFg);
         doc.text(badgeTxt, ML+CW-bw-2, y+17);
 
-        // Beta badge — sits inline in flow, not floating
+        // Beta badge — rendered at cy, advances cy by exact badge height + gap
         if(note.beta){
           doc.setFont('helvetica','bold'); doc.setFontSize(7);
           const betaTxt='β BETA';
@@ -1335,7 +1335,7 @@
           doc.roundedRect(ML+15, cy, betaW, 13, 3, 3, 'FD');
           doc.setTextColor(124,58,237);
           doc.text(betaTxt, ML+21, cy+9);
-          cy += betaH;
+          cy += 13 + 5; // badge height(13) + gap(5) = exact 18 matches betaH
         }
 
         // Title
@@ -1364,20 +1364,44 @@
 
         y += cardH + 10;
 
-        // Image/GIF in PDF — jsPDF renders only the first frame of GIFs (static)
-        // Full animated GIFs are shown in web view only
+        // Image/GIF in PDF
         if(note.image && note.image.startsWith('data:')){
-          try{
-            const imgProps = doc.getImageProperties(note.image);
-            const imgW = Math.min(CW-30, 320);
-            const imgH = (imgProps.height / imgProps.width) * imgW;
-            y = checkPage(y, imgH+20);
-            // Rounded image container
-            doc.setFillColor(248,248,250); doc.setDrawColor(...BORDER); doc.setLineWidth(0.5);
-            doc.roundedRect(ML, y, CW, imgH+16, 4, 4, 'FD');
-            doc.addImage(note.image, imgProps.fileType||'JPEG', ML+(CW-imgW)/2, y+8, imgW, imgH);
-            y += imgH + 24;
-          }catch(e){ /* skip if image fails */ }
+          const isGif = note.image.startsWith('data:image/gif');
+          if(isGif){
+            // GIFs: show first frame with a label noting it's animated
+            try{
+              const imgProps = doc.getImageProperties(note.image);
+              const imgW = Math.min(CW-30, 320);
+              const imgH = (imgProps.height / imgProps.width) * imgW;
+              y = checkPage(y, imgH+36);
+              doc.setFillColor(248,248,250); doc.setDrawColor(...BORDER); doc.setLineWidth(0.5);
+              doc.roundedRect(ML, y, CW, imgH+30, 4, 4, 'FD');
+              doc.addImage(note.image, 'GIF', ML+(CW-imgW)/2, y+8, imgW, imgH);
+              // Label
+              doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...LIGHT);
+              doc.text('▶ Animated in web version', ML+(CW/2), y+imgH+22, {align:'center'});
+              y += imgH + 38;
+            }catch(e){
+              // Fallback placeholder
+              y = checkPage(y, 44);
+              doc.setFillColor(248,248,250); doc.setDrawColor(...BORDER); doc.setLineWidth(0.5);
+              doc.roundedRect(ML, y, CW, 36, 4, 4, 'FD');
+              doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...LIGHT);
+              doc.text('▶ Animated GIF — view in web version', ML+CW/2, y+21, {align:'center'});
+              y += 44;
+            }
+          } else {
+            try{
+              const imgProps = doc.getImageProperties(note.image);
+              const imgW = Math.min(CW-30, 320);
+              const imgH = (imgProps.height / imgProps.width) * imgW;
+              y = checkPage(y, imgH+20);
+              doc.setFillColor(248,248,250); doc.setDrawColor(...BORDER); doc.setLineWidth(0.5);
+              doc.roundedRect(ML, y, CW, imgH+16, 4, 4, 'FD');
+              doc.addImage(note.image, imgProps.fileType||'JPEG', ML+(CW-imgW)/2, y+8, imgW, imgH);
+              y += imgH + 24;
+            }catch(e){ /* skip */ }
+          }
         }
       });
       y += 12;
