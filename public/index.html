@@ -1114,21 +1114,25 @@
       return doc.splitTextToSize(text || '', maxW);
     }
 
-    const VOIRO_LOGO_B64 = 'data:image/png;base64,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';
+    const VOIRO_LOGO_B64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGMAAAAkCAYAAACdZoRBAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAAPKklEQVR42u1aeXQVZZb/3ap6LwsYJBAgLAFkJwRCEgMCIUSWjIgtw0ywZ7QHx1GxtW3PeKZdpscJdPd40Bm7W+kRo9gLo06buLAngWjS2mCjIGqHoAi2AWTJIgmQ5b1XVb/5I1/hR5FNGujR43fOO/Xeq6pvufd+v/u7937A16CRlK/DOuTroAgRIckEAN8DMAzAOwAKANgAICLEN+3iK0J9Ykm+z7PbGvWM8Y2kLo0yTHXNVQoIkQyTtElGSA78KsHYV91qPCHHtrMmA0Dw6wLHXyWY6key3gdTb5A0v4GpS6sQQ10zSZaQrCT5HMlB3/iMvzC1/SrT3HYXcT5U0C+E7vRBUoqKioyEhISz3q2trWVeXp77ZebhOXMRcdR3iojbjTnrn7Nue59ursXooB+3u338xaClsLDQ7Oq5wsLCC475JA2Slqe8C8HoujNHNWanu9bStMo/Z2e0szvEb5neThARBwB27tzZq66uLpNkakuopY/rAtExMfWWJX/sEd1jR1ZW1glPKV3tlO7uTDUn1xMQgMHq0x9ANICeABoBHANQDeCwiEQ62An01kJyCICJAK4AEKcCzsMA9gCoFBHbU573zjlzU4t4UXUUARAA8IaI3E7S6Gyre/dJJgN4yQd/i0Skqr0+tm7delXIDj/oOu4813UNkscBqQVIAH1FZKAh4hiGWQry4QULFuwAgPz8fGP58uV+BZsKmlYDmAEgrCjtL0TkF9p9D0JGALgawCwAaQCGAojqYIkhAJ8BuF5EKrX1mpoSFgG4HcB0pcj22l4A/wugQERqNEWeZTCWSiUcBzBG+78fyXtF5LSXbugkTnHV4sbqsA/gT5688vPzjaPXXWfm1tT0jxb+a8Sxb3Jd9w3DtL4TGx3YPmfOnM/0Trdt29avoaEhxwXuDAQCfyguLV5jwLgzNze3qRMDucK3hkTN4DwhXqEsNeB7N6wjg9aCAJIAnPhC97RExFYG+IRau9dsz0do8rEAjAPwIwB3kfw3EVnt0fJzZEtyDklXRa0RxdNn6I6xiwj4VZIOyWYV/f7qLKeqnn+ztPiuLa+Vcd3GDSzesuUOkS+QpaCgIFBQUBDwO8DS0tKrS7aUHiopLdn/0saNQ/10VZtDsTYHh2S+htUe/R2n1hZR83TYdavUYhoP1ueTbFT3bZ/c/M1RWQH9/lOqP1OHV0td31baj1dQBQDzAPy+o+hVadUh2RPANM0KTAClALCr7T8nraAgkYOH3nnLseMv7LNaE7b3GXrrCTvy6Kvr1z9pWsYvYwJRP50zZ06VZ8kFBQWB0aNHs7a2lrm5ua+XlpaOhUhxrGXuKCsrmwSgph3IEjUH79PevD2GZGnW+x6AtwBUKj/hArgcwCAFPfs1FImQnAdgnerDVuN4cjwF4CMANQBiAIwEMERDEBeAA2ApgCgR+UdlTA4AWAr/TpKsALBIm2QugH/3nF0HEOUAyATQT30PAGgCUAEAGyoqCEAiCYm/CSQOnhst5gPjHOeVT+vrf77uyJGViePHLDjm8qGQY+9Zt2F9eXQw6j9zc3OLly5dGgGA/PJ8a+fOnYGMjIwmkrM2l5bsbm5p2QggMzk5Wc4zphDtagP4logc6iLKNwDYJJMA/FYJ31V9mAA+BfAogHUickR7NxbAFAD3ALheM4QIgJtJfiAiP/N8kG5B6325nVSSwxXWGp0s6loNLwFgm4gcy6+sDC7PybFTnnvxVqN/4txQzfEQTNOKiY9fPH7w8O33jkupyG1y5dpNm6dOsJ0rY03zlA1uXr9x4yfFxcV3VVZW9lyes9zOyMiIFBYWBgGAtpNrGJK2YcOGf168eLFTUVFxIehpUEFZUMGGqX5bytdQMUMCWAmgt1orlSJeBpAuIqtE5IgGP4aINItIuYgsBHCbtjO93fAwyREAXJKG7twS1ZaM1VjVUgDPADA9auajkgaA9wEkayzmuyLyFEkzY9myqHB65ofSs9dghlqJNrbgQkTMmBjDCgQQaWg4ejIUXvVpzeHVTf0vk3eiet190nHvhohhivFMdFzUE7NnzD7gjbt27doHxDTyhw5J6puamtpcXl5u5uTk2CRL1G4OKXa0XESWKZx31RrHKmajO9wxIvJJR8RAY2NTFZx5tNQEsElEFmg02dEdsiYjUU7/RgDPaZBlAVgjIktImp4iDBE5qnwENWi6TnXOdigtAUwAMF49H1CCKPYi4fDIMfPNy+OHuOGQCxFvUqYAhtvc7IYaGx1ERSXGD+j/o4lJIw6modcjs2oaC5P2VvQfaJh3ku78ltPh/es3bSwpKSvLAYCFCxeucF3XqT5c/W0AbGlpuSDBWzfaHVpEbSjGeLO3E0TE9jMjEaGIOEoRQRF5HsAv1fueXBeRTPBgSoem32qOEABmeg/68Nm7f516PqKub4pIdX5lZVvquudl18MwCZLtRF+GiJgMhxluaLBpmlZsQsJNk4cmvXvT+HkluU2tDbetWz9pjO1MjxKB6zqvb9i8+aN169YtNsR4zXW4GACSkpIuWppBIymxAOZqJEAArBSROoUaTje6sxXcLwPQonaFo2KTWbpQvc42KUYQUFs4DsA8pQjdAj3lLPL5j0KSsiw5uc16TGMy7YhIZ3UTERERC47DyMmTjt0acq3L4mYMGzj41YSFeVWzWzkj9+P935kVPjUszjJKxJBnY2JjvkXXTSkvL7eSk5PtS5C7G6HiFirZOACKlAy6ZQweBCqysE317aj3M88oQwV+pojUANiiHvAUdIPafm47EDVJ/R8EcBrAehGhIWKn33//ZTDM/rSd7hV32pRiAjCcpqY2CIuOHtp30MBHJo5Jrp7kRD+QXX38qVYxRtmtoQdNwzgcDAbju0oGXiBlDNGEJwCOAPhUl0t3i3lKge/4xhjur/R5A6/RKBsAXE0yUWNV3jt/q7570WuxiBwvJy0COB0d34NELHgesvoCwpxIw4kQDSvm8mEj7piSMqHqoVPN981fsGDF9QsXZYb37Tt5oRJ+XbSABlEA0CAireeTx1PP1/j+jvUrw4OerQAOany4h/INHoPwUtR52n+iHBP27dolbX82t4ogBJHzAWuXpC2mZQbiekVZroPTR468vMM0ZsR/uGfF/uxpN++bmlIc/tmP48Q0nUugDL9F9SQZOJ/6iXq+Vzs5sDORowdVloi0kHwBwAPaJP4OwNNeckvRvHHKrwQAHADwuhrIXgqgqqqqMSV9Sh1MszciEXYHqqig0YyONq1glOE0NjScaJbVfxow4kmmDjsRSR526+dxcYWXB4IDPxepW21HN9Bx5CLWCrx+j/oyFoMADCR5UK2ru+N78kvx9X/YvzN0C1ijCZoAppMcrcUaN/oCvTUiElbMgnmkiaIiB45baQQCZGe4qvI3AGD16GFGxcaabG3ZW+3Yt7/Xr/ewT+bOfLbhtmseqslKr6uP7/MvJ8RccThiFzqQPUVVVWE8/bR1MUsv6voxgHqNOQYBXKOMwPgSO4IkewPI0VAFAN49RxlazLEXQLnmEwIA/l5x6l4aiwoCaAXwG12ZNRUVAgBupHVTB9UvqKjThmVJMC7OtEwDkdNNJbuCMbM/uOMnabU35lbXfu+WzXXZV+49FRUzodFxb0h8c1fiuO27V0YLZobhrAeAjysrL1qNWyM2jQDe1GIDALiXZFAJuDtzCCiy8X2VA7TVTgsDeA0daNX7r8D3+x+UJcxXhZiQurdFRKrVpF0A+N2sWQ4AxO4/utZtaPjcCAZFizUcAo4RDBpRvXpZZjjSdLKp6b93J/Qf87trZt8QvuWvx9cMPrX/2LDRxa2mVX0k5KYP+f27maO3734ZAPdMmXSTJcaAg6HAGgAYtWjRpfAZAPCsRmwcAKMA/JeKMaQjIqEMOCgiYQXvD2ppdgFQJiIHSZrtbXHPkW9SjjxJaXE4ySwAf+NT0qpznJiCqiKR+omFLz1u9um7PBIOhwQMmrE9TFME9umTBw4BK2uCg57j3PFxDWlj7wtlpf9TPdDY6rpP7mltXrXgnapjAMDsbAu1tcb3w2GJN42Vp133pzm73qsrz862MGvWRa0tq6DPALBZZbczlTIcAHeTPCUiP/Sl9D15uMpAw6ok8ZJK1bjaMz/usl6rrsu0k3ouyQ9JnlTfqX63X9slBKQx9bHHYlLWbqpM2/kBU7eWc/zmsnJz285rsWRJNAf0nFk3JeX12uwreSQrffe+aWk36qSCeXkms7Mt5uWZAHB4+qSiYzPSPnts6tQY5sOgZpHqmA5JtqrrsnbqGWN9tYaIKjh1eqRHGyNd1SdsJQNb9bOVZFZ7ciA5hOR/qJoG1Xve98e7qhnpZ5GGqGKNqymAWqHkHl1557T8fAMAJjzz64lpxWXPBioqJhcCPUNjBt9yfNrkQzUzM3hoRvorH0ybfNVZ4ysFMDv7TL8Hp6eu+jwr3S2bPGFiW/kQhk9QF00ZvnGWakUlR1MI1XnfX5NcQfIJpaST7RSaSLKCZMBfYOpq8Be0iTvq45I8QbJPN7j2mUjj4PjhdzXMzGj6bEZay/6stB88n57e98x46ekB/tXIKGZnW3pn5Zkpg2ump79WPyOjdVtG6jQAKFQ75VIqw4cY9/j6iPiMle2ME9Eqi+Uke3mlV3+lr7P2OIBva9lcW+He/4hIvVcT7mwNL+blmWVz5hiHnn/m7ZGu+3Y0JN113Z6pltsbQB0AyK5dqsLYVlh7NzN1fN+ALO1h4Ls28d6Olpbk+bv2HGBenilFRe05bUfNzVZO1u2Aqtq+FPqX8R+2Wu/jJD9RNfBhGpOM+Mb1HL6ljf9zAPcrh35W2l66OmOk6O52AFf5bo9WkpPu5IfYtkMIAB9NTV8Sb/KHFI6yXR4Kkx86YhwlXFjkgIBhjDEhSRAeOO3IwyPf2v0rb0cs9ilCqzdsU+Vfrz0qIvf76hnJqryqt1Eisr+rkzAdjNlbUdUlXn6pg9asCMBjIvIHLSPM9hJhXQ2apY6jeEWnPSKyoouTI+e6EMBYBtBTyh+np06Ko8yGcLIB9G0je1LvUN5volGW/NbO3Z4ilwGyvB1r1wzmPgAp2hxfFZFXFIy5KmYYCOARX5D7A3V8Rr7sCUbtuE4MgKkArlR172i1C454NXYROajBqntBswZ/zplW5uWZ7EZ6RACUa078/1vTT4x0R3ldJTX/D/E0j4skYCh5AAAAAElFTkSuQmCC';
 
     function addHeader(hideClient){
       // Full-width teal header bar
       doc.setFillColor(...TEAL); doc.rect(0,0,W,76,'F');
 
       // LEFT: Voiro logo mark (real PNG) + wordmark text
-      const logoH = 42; // pts tall
-      const logoW = 42; // square mark
-      const logoY = (76 - logoH) / 2;
+
+      // Logo: wordmark is ~2.75x wider than tall
+      const logoAspect = 99/36;
+      const logoHpt = 32;
+      const logoWpt = logoHpt * logoAspect;
       try{
-        doc.addImage(VOIRO_LOGO_B64, 'PNG', ML, logoY, logoW, logoH);
-      }catch(e){}
-      doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(255,255,255);
-      doc.text('Voiro', ML + logoW + 7, 76/2 + 7);
+        doc.addImage(VOIRO_LOGO_B64, 'PNG', ML, (76-logoHpt)/2, logoWpt, logoHpt);
+      }catch(e){
+        // Fallback: text only
+        doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(255,255,255);
+        doc.text('Voiro', ML, 76/2 + 7);
+      }
 
       // CENTRE: "Release Notes"
       doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(255,255,255);
@@ -1219,43 +1223,50 @@
       items.forEach(note=>{
         const clientTxt = note.client && note.client!=='All' ? normalizeClient(note.client).toUpperCase() : null;
 
-        // IMPORTANT: set font size BEFORE splitTextToSize so width calculation is correct
-        // Title width: full card minus left accent(3) + padding(12) + badge area(80) + right padding(12)
-        const TITLE_W = CW - 3 - 12 - 80 - 12;
-        // Summary width: full card minus left accent(3) + padding(12) + right padding(12)
-        const BODY_W = CW - 3 - 12 - 12;
-        // Bullet width: indent(15) + bullet(9) + right padding(12)
-        const BULL_W = CW - 3 - 12 - 15 - 9 - 12;
+        // Line heights must exactly match rendering below
+        const TITLE_FS = 11, TITLE_LH = 15;   // font 11, line height 15pt
+        const BODY_FS  = 9.5, BODY_LH  = 14;  // font 9.5, line height 14pt
+        const BULL_FS  = 8.5, BULL_LH  = 13;  // font 8.5, line height 13pt
 
-        doc.setFont('helvetica','bold'); doc.setFontSize(11);
+        // Available text widths — must account for: left accent(3) + left pad(15) + right pad(15)
+        const TITLE_W = CW - 3 - 15 - 90; // subtract badge area too
+        const BODY_W  = CW - 3 - 15 - 15;
+        const BULL_W  = CW - 3 - 15 - 12 - 12; // bullet char(12) + right pad
+
+        // Split text at correct font sizes
+        doc.setFont('helvetica','bold'); doc.setFontSize(TITLE_FS);
         const titleLines = doc.splitTextToSize(note.title||'', TITLE_W);
 
-        doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+        doc.setFont('helvetica','normal'); doc.setFontSize(BODY_FS);
         const sumLines = doc.splitTextToSize(note.summary||note.description||'', BODY_W);
 
-        doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+        doc.setFont('helvetica','normal'); doc.setFontSize(BULL_FS);
         const bulletData = (note.bullets||[]).map(b=>doc.splitTextToSize(b, BULL_W));
         const bulletLineCount = bulletData.reduce((a,b)=>a+b.length,0);
 
-        const clientH = (clientTxt && !hideClient) ? 20 : 0;
-        const betaH = note.beta ? 16 : 0;
-        const titleH = titleLines.length * 16;
-        const sumH = sumLines.length * 14 + 10;
-        const bullH = bulletLineCount > 0 ? bulletLineCount * 13 + 16 : 0;
-        const imgPdfH = (note.image && note.image.startsWith('data:')) ? 0 : 0; // image is outside card now
-        const cardH = 16 + clientH + betaH + titleH + sumH + bullH + 16;
+        // Height components — must match rendering exactly
+        const PAD_TOP    = 16;
+        const PAD_BOT    = 18;
+        const clientH    = (clientTxt && !hideClient) ? 22 : 0;
+        const betaH      = note.beta ? 18 : 0;
+        const titleH     = titleLines.length * TITLE_LH + 10; // +10 gap after title
+        const bodyH      = sumLines.length * BODY_LH + 10;    // +10 gap after body
+        const bullBoxH   = bulletLineCount > 0
+          ? 10 + bulletLineCount * BULL_LH + 8  // 10 top pad, lines, 8 bottom pad
+          : 0;
+        const cardH = PAD_TOP + clientH + betaH + titleH + bodyH + bullBoxH + PAD_BOT;
 
         y = checkPage(y, cardH);
 
-        // Card
+        // Card background
         doc.setFillColor(...WHITE); doc.setDrawColor(...BORDER); doc.setLineWidth(0.5);
         doc.roundedRect(ML, y, CW, cardH, 4, 4, 'FD');
-        // Left accent
+        // Left teal accent
         doc.setFillColor(...TEAL); doc.rect(ML, y, 3, cardH, 'F');
 
-        let cy = y + 16;
+        let cy = y + PAD_TOP;
 
-        // Client tag — only if not hiding client names
+        // Client tag
         if(clientTxt && !hideClient){
           doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
           const tw = doc.getTextWidth(clientTxt) + 14;
@@ -1263,10 +1274,10 @@
           doc.roundedRect(ML+12, cy-9, tw, 14, 3, 3, 'FD');
           doc.setTextColor(15,118,110);
           doc.text(clientTxt, ML+19, cy);
-          cy += 20;
+          cy += clientH;
         }
 
-        // Category badge (top right of card) — set font before measuring
+        // Category badge top-right
         doc.setFont('helvetica','bold'); doc.setFontSize(7);
         const badgeTxt = cat.toUpperCase();
         const bw = doc.getTextWidth(badgeTxt) + 16;
@@ -1275,7 +1286,7 @@
         doc.setTextColor(...badgeFg);
         doc.text(badgeTxt, ML+CW-bw-2, y+17);
 
-        // Beta badge in PDF
+        // Beta badge
         if(note.beta){
           doc.setFont('helvetica','bold'); doc.setFontSize(7);
           const betaTxt='β BETA';
@@ -1284,29 +1295,30 @@
           doc.roundedRect(ML+15, cy-10, betaW, 13, 3, 3, 'FD');
           doc.setTextColor(124,58,237);
           doc.text(betaTxt, ML+21, cy-1);
-          cy += 16;
+          cy += betaH;
         }
+
         // Title
-        doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...DARK);
+        doc.setFont('helvetica','bold'); doc.setFontSize(TITLE_FS); doc.setTextColor(...DARK);
         doc.text(titleLines, ML+15, cy);
-        cy += titleLines.length * 16 + 8;
+        cy += titleLines.length * TITLE_LH + 10;
 
         // Summary
-        doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(...MID);
+        doc.setFont('helvetica','normal'); doc.setFontSize(BODY_FS); doc.setTextColor(...MID);
         doc.text(sumLines, ML+15, cy);
-        cy += sumLines.length * 14 + 8;
+        cy += sumLines.length * BODY_LH + 10;
 
-        // Bullets
+        // Bullet box
         if(bulletData.length > 0){
           doc.setFillColor(...BGGRAY); doc.setDrawColor(235,235,240); doc.setLineWidth(0.3);
-          doc.roundedRect(ML+15, cy-2, CW-30, bullH+4, 3, 3, 'FD');
-          cy += 8;
+          doc.roundedRect(ML+15, cy, CW-30, bullBoxH, 3, 3, 'FD');
+          cy += 10;
           bulletData.forEach(bLines=>{
-            doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+            doc.setFont('helvetica','normal'); doc.setFontSize(BULL_FS);
             doc.setTextColor(...TEAL); doc.text('•', ML+20, cy);
             doc.setTextColor(...MID);
             doc.text(bLines, ML+30, cy);
-            cy += bLines.length * 13;
+            cy += bLines.length * BULL_LH;
           });
         }
 
