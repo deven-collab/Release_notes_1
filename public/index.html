@@ -1295,7 +1295,7 @@
         const bullBoxH = bulletLineCount > 0
           ? 12 + Math.ceil(bulletLineCount * bullLH) + 10
           : 0;
-        const cardH = PAD_T + clientH + betaH + titleH + bodyH + bullBoxH + PAD_B;
+        const cardH = PAD_T + clientH + betaH + titleH + bodyH + bullBoxH + PAD_B + 24; // +24 buffer to prevent overflow
 
         y = checkPage(y, cardH);
 
