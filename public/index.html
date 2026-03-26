@@ -1326,15 +1326,15 @@
         doc.setTextColor(...badgeFg);
         doc.text(badgeTxt, ML+CW-bw-2, y+17);
 
-        // Beta badge
+        // Beta badge — x starts at ML+12 (clear of ML+3 teal bar), with 2pt top gap
         if(note.beta){
           doc.setFont('helvetica','bold'); doc.setFontSize(7);
           const betaTxt='β BETA';
           const betaW=doc.getTextWidth(betaTxt)+12;
-          doc.setFillColor(245,243,255); doc.setDrawColor(196,181,253); doc.setLineWidth(0.3);
-          doc.roundedRect(ML+15, cy, betaW, 13, 3, 3, 'FD');
+          doc.setFillColor(245,243,255); doc.setDrawColor(196,181,253); doc.setLineWidth(0.8);
+          doc.roundedRect(ML+10, cy+2, betaW, 13, 3, 3, 'FD');
           doc.setTextColor(124,58,237);
-          doc.text(betaTxt, ML+21, cy+9);
+          doc.text(betaTxt, ML+16, cy+11);
           cy += 26;
         }
 
