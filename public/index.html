@@ -1114,33 +1114,55 @@
       return doc.splitTextToSize(text || '', maxW);
     }
 
+    // Voiro logo mark — drawn as jsPDF vector paths (SVG coordinates scaled to fit)
+    // SVG viewBox: 0 0 60 38.89 (just the mark, not the wordmark text)
+    function drawVoiroMark(x, y, sz){
+      // sz = target height in points
+      const sx = sz / 38.89;
+      const sy = sz / 38.89;
+      function px(vx){ return x + vx * sx; }
+      function py(vy){ return y + vy * sy; }
+
+      // Teal arc (cls-1) — left sweep — solid white
+      doc.setFillColor(255,255,255);
+      doc.triangle(px(29.47),py(15.17), px(51.74),py(24.58), px(29.4),py(34.33),'F');
+
+      // Semi-white arc (cls-3) — top sweep
+      doc.setFillColor(255,255,255,0.5);
+      doc.triangle(px(53.83),py(23.81), px(30.56),py(14.14), px(53.85),py(24.19),'F');
+
+      // White arc (cls-2) — bottom sweep
+      doc.setFillColor(255,255,255);
+      doc.triangle(px(53.41),py(25.49), px(30.47),py(35.38), px(53.84),py(24.19),'F');
+    }
+
     function addHeader(hideClient){
-      // Full-width teal header bar — taller for cleaner layout
-      doc.setFillColor(...TEAL); doc.rect(0,0,W,84,'F');
+      // Full-width teal header bar
+      doc.setFillColor(...TEAL); doc.rect(0,0,W,76,'F');
 
-      // LEFT: Voiro logo wordmark
-      doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(255,255,255);
-      doc.text('Voiro',ML,38);
-      const voiroW = doc.getTextWidth('Voiro');
-      // Small "®" style dot separator
-      doc.setFillColor(255,255,255); doc.circle(ML+voiroW+8, 32, 2, 'F');
-      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(220,248,248);
-      doc.text('Platform Updates',ML+voiroW+16, 38);
+      // LEFT: Voiro mark + wordmark
+      const markH = 28; // height of mark in pts
+      const markY = (76 - markH) / 2; // vertically centred
+      drawVoiroMark(ML, markY, markH);
 
-      // CENTRE: "Release Notes" large centred title
-      doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(255,255,255);
-      doc.text('Release Notes', W/2, 48, {align:'center'});
+      const markW = markH * (54 / 38.89); // proportional width of just the mark
+      doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(255,255,255);
+      doc.text('Voiro', ML + markW + 6, 76/2 + 7);
 
-      // RIGHT: Client name (if showing) + release date
+      // CENTRE: "Release Notes"
+      doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(255,255,255);
+      doc.text('Release Notes', W/2, 76/2 + 6, {align:'center'});
+
+      // RIGHT: client + date
       const displayDate = currentMeta.releaseDate || today;
       if(!hideClient && currentMeta.client && currentMeta.client !== 'All Clients'){
         doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
-        doc.text(currentMeta.client, W-MR, 34, {align:'right'});
+        doc.text(currentMeta.client, W-MR, 30, {align:'right'});
         doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(200,245,245);
         doc.text(displayDate, W-MR, 48, {align:'right'});
       } else {
         doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(200,245,245);
-        doc.text(displayDate, W-MR, 48, {align:'right'});
+        doc.text(displayDate, W-MR, 43, {align:'right'});
       }
     }
 
@@ -1152,13 +1174,13 @@
     }
 
     function checkPage(y, neededH){
-      if(y + neededH > 810){ doc.addPage(); addHeader(hideClient); return 104; }
+      if(y + neededH > 810){ doc.addPage(); addHeader(hideClient); return 96; }
       return y;
     }
 
     // Page 1
     addHeader(hideClient);
-    let y = 104;
+    let y = 96;
 
     // Executive summary block
     if(currentMeta.summary){
