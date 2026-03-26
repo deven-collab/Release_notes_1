@@ -1289,7 +1289,7 @@
         // Compute exact card height using real line heights
         const PAD_T = 16, PAD_B = 20;
         const clientH = (clientTxt && !hideClient) ? 22 : 0;
-        const betaH   = note.beta ? 18 : 0;
+        const betaH   = note.beta ? 26 : 0; // badge(13) + gap before title baseline(13)
         const titleH  = Math.ceil(titleLines.length * titleLH) + 10;
         const bodyH   = Math.ceil(sumLines.length  * bodyLH)  + 12;
         const bullBoxH = bulletLineCount > 0
@@ -1335,7 +1335,7 @@
           doc.roundedRect(ML+15, cy, betaW, 13, 3, 3, 'FD');
           doc.setTextColor(124,58,237);
           doc.text(betaTxt, ML+21, cy+9);
-          cy += 13 + 5; // badge height(13) + gap(5) = exact 18 matches betaH
+          cy += 26; // badge(13) + gap(13) so title baseline at cy+TITLE_FS clears badge bottom
         }
 
         // Title
@@ -1373,23 +1373,12 @@
               const imgProps = doc.getImageProperties(note.image);
               const imgW = Math.min(CW-30, 320);
               const imgH = (imgProps.height / imgProps.width) * imgW;
-              y = checkPage(y, imgH+36);
+              y = checkPage(y, imgH+20);
               doc.setFillColor(248,248,250); doc.setDrawColor(...BORDER); doc.setLineWidth(0.5);
-              doc.roundedRect(ML, y, CW, imgH+30, 4, 4, 'FD');
+              doc.roundedRect(ML, y, CW, imgH+16, 4, 4, 'FD');
               doc.addImage(note.image, 'GIF', ML+(CW-imgW)/2, y+8, imgW, imgH);
-              // Label
-              doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...LIGHT);
-              doc.text('▶ Animated in web version', ML+(CW/2), y+imgH+22, {align:'center'});
-              y += imgH + 38;
-            }catch(e){
-              // Fallback placeholder
-              y = checkPage(y, 44);
-              doc.setFillColor(248,248,250); doc.setDrawColor(...BORDER); doc.setLineWidth(0.5);
-              doc.roundedRect(ML, y, CW, 36, 4, 4, 'FD');
-              doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...LIGHT);
-              doc.text('▶ Animated GIF — view in web version', ML+CW/2, y+21, {align:'center'});
-              y += 44;
-            }
+              y += imgH + 24;
+            }catch(e){ /* skip if GIF unreadable */ }
           } else {
             try{
               const imgProps = doc.getImageProperties(note.image);
