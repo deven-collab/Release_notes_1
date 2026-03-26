@@ -1122,16 +1122,21 @@
 
       // LEFT: Voiro logo mark (real PNG) + wordmark text
 
-      // Logo: wordmark is ~2.75x wider than tall
+      // Logo with white pill background
       const logoAspect = 99/36;
-      const logoHpt = 32;
+      const logoHpt = 28;
       const logoWpt = logoHpt * logoAspect;
+      const logoX = ML;
+      const logoY = (76 - logoHpt) / 2;
+      const padX = 10, padY = 6;
+      // White rounded rectangle behind logo
+      doc.setFillColor(255,255,255);
+      doc.roundedRect(logoX - padX, logoY - padY, logoWpt + padX*2, logoHpt + padY*2, 6, 6, 'F');
       try{
-        doc.addImage(VOIRO_LOGO_B64, 'PNG', ML, (76-logoHpt)/2, logoWpt, logoHpt);
+        doc.addImage(VOIRO_LOGO_B64, 'PNG', logoX, logoY, logoWpt, logoHpt);
       }catch(e){
-        // Fallback: text only
-        doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(255,255,255);
-        doc.text('Voiro', ML, 76/2 + 7);
+        doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(...TEAL);
+        doc.text('Voiro', logoX, logoY + logoHpt);
       }
 
       // CENTRE: "Release Notes"
@@ -1223,17 +1228,15 @@
       items.forEach(note=>{
         const clientTxt = note.client && note.client!=='All' ? normalizeClient(note.client).toUpperCase() : null;
 
-        // Line heights must exactly match rendering below
-        const TITLE_FS = 11, TITLE_LH = 15;   // font 11, line height 15pt
-        const BODY_FS  = 9.5, BODY_LH  = 14;  // font 9.5, line height 14pt
-        const BULL_FS  = 8.5, BULL_LH  = 13;  // font 8.5, line height 13pt
+        // Text widths — conservative to avoid overflow
+        const TITLE_W = CW - 100; // leave room for badge on right
+        const BODY_W  = CW - 30;
+        const BULL_W  = CW - 50;  // indent + bullet + right pad
 
-        // Available text widths — must account for: left accent(3) + left pad(15) + right pad(15)
-        const TITLE_W = CW - 3 - 15 - 90; // subtract badge area too
-        const BODY_W  = CW - 3 - 15 - 15;
-        const BULL_W  = CW - 3 - 15 - 12 - 12; // bullet char(12) + right pad
+        // Font sizes
+        const TITLE_FS = 11, BODY_FS = 9.5, BULL_FS = 8.5;
 
-        // Split text at correct font sizes
+        // Split at correct font size (MUST set font before splitting)
         doc.setFont('helvetica','bold'); doc.setFontSize(TITLE_FS);
         const titleLines = doc.splitTextToSize(note.title||'', TITLE_W);
 
@@ -1244,27 +1247,33 @@
         const bulletData = (note.bullets||[]).map(b=>doc.splitTextToSize(b, BULL_W));
         const bulletLineCount = bulletData.reduce((a,b)=>a+b.length,0);
 
-        // Height components — must match rendering exactly
-        const PAD_TOP    = 16;
-        const PAD_BOT    = 18;
-        const clientH    = (clientTxt && !hideClient) ? 22 : 0;
-        const betaH      = note.beta ? 18 : 0;
-        const titleH     = titleLines.length * TITLE_LH + 10; // +10 gap after title
-        const bodyH      = sumLines.length * BODY_LH + 10;    // +10 gap after body
-        const bullBoxH   = bulletLineCount > 0
-          ? 10 + bulletLineCount * BULL_LH + 8  // 10 top pad, lines, 8 bottom pad
+        // Use getLineHeight for precise measurements
+        doc.setFont('helvetica','bold'); doc.setFontSize(TITLE_FS);
+        const titleLH = doc.getLineHeight();
+        doc.setFont('helvetica','normal'); doc.setFontSize(BODY_FS);
+        const bodyLH = doc.getLineHeight();
+        doc.setFont('helvetica','normal'); doc.setFontSize(BULL_FS);
+        const bullLH = doc.getLineHeight();
+
+        // Compute exact card height using real line heights
+        const PAD_T = 16, PAD_B = 20;
+        const clientH = (clientTxt && !hideClient) ? 22 : 0;
+        const betaH   = note.beta ? 18 : 0;
+        const titleH  = Math.ceil(titleLines.length * titleLH) + 10;
+        const bodyH   = Math.ceil(sumLines.length  * bodyLH)  + 12;
+        const bullBoxH = bulletLineCount > 0
+          ? 12 + Math.ceil(bulletLineCount * bullLH) + 10
           : 0;
-        const cardH = PAD_TOP + clientH + betaH + titleH + bodyH + bullBoxH + PAD_BOT;
+        const cardH = PAD_T + clientH + betaH + titleH + bodyH + bullBoxH + PAD_B;
 
         y = checkPage(y, cardH);
 
-        // Card background
+        // Card background + left accent
         doc.setFillColor(...WHITE); doc.setDrawColor(...BORDER); doc.setLineWidth(0.5);
         doc.roundedRect(ML, y, CW, cardH, 4, 4, 'FD');
-        // Left teal accent
         doc.setFillColor(...TEAL); doc.rect(ML, y, 3, cardH, 'F');
 
-        let cy = y + PAD_TOP;
+        let cy = y + PAD_T;
 
         // Client tag
         if(clientTxt && !hideClient){
@@ -1277,7 +1286,7 @@
           cy += clientH;
         }
 
-        // Category badge top-right
+        // Category badge — top right
         doc.setFont('helvetica','bold'); doc.setFontSize(7);
         const badgeTxt = cat.toUpperCase();
         const bw = doc.getTextWidth(badgeTxt) + 16;
@@ -1301,24 +1310,24 @@
         // Title
         doc.setFont('helvetica','bold'); doc.setFontSize(TITLE_FS); doc.setTextColor(...DARK);
         doc.text(titleLines, ML+15, cy);
-        cy += titleLines.length * TITLE_LH + 10;
+        cy += Math.ceil(titleLines.length * titleLH) + 10;
 
-        // Summary
+        // Body
         doc.setFont('helvetica','normal'); doc.setFontSize(BODY_FS); doc.setTextColor(...MID);
         doc.text(sumLines, ML+15, cy);
-        cy += sumLines.length * BODY_LH + 10;
+        cy += Math.ceil(sumLines.length * bodyLH) + 12;
 
         // Bullet box
         if(bulletData.length > 0){
           doc.setFillColor(...BGGRAY); doc.setDrawColor(235,235,240); doc.setLineWidth(0.3);
           doc.roundedRect(ML+15, cy, CW-30, bullBoxH, 3, 3, 'FD');
-          cy += 10;
+          cy += 12;
           bulletData.forEach(bLines=>{
             doc.setFont('helvetica','normal'); doc.setFontSize(BULL_FS);
             doc.setTextColor(...TEAL); doc.text('•', ML+20, cy);
             doc.setTextColor(...MID);
             doc.text(bLines, ML+30, cy);
-            cy += bLines.length * BULL_LH;
+            cy += Math.ceil(bLines.length * bullLH);
           });
         }
 
