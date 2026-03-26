@@ -1278,24 +1278,25 @@
           + bulletData.reduce((a,b)=>a+b.length,0)*13 + 60 + PAD_B;
         y = checkPage(y, roughH);
 
-        // --- PASS 1: measure actual content height by simulating cy ---
+        // --- PASS 1: measure actual content height (mirrors render pass exactly) ---
+        doc.setFont('helvetica','bold'); doc.setFontSize(TITLE_FS);
+        const titleLH = doc.getLineHeight();
+        doc.setFont('helvetica','normal'); doc.setFontSize(BODY_FS);
+        const bodyLH = doc.getLineHeight();
+        doc.setFont('helvetica','normal'); doc.setFontSize(BULL_FS);
+        const bullLH = doc.getLineHeight();
+
         let simCy = PAD_T;
         if(clientTxt && !hideClient) simCy += 22;
         if(note.beta) simCy += 26;
-        doc.setFont('helvetica','bold'); doc.setFontSize(TITLE_FS);
-        const titleLH = doc.getLineHeight();
-        simCy += titleLines.length * titleLH + 10;
-        doc.setFont('helvetica','normal'); doc.setFontSize(BODY_FS);
-        const bodyLH = doc.getLineHeight();
-        simCy += sumLines.length * bodyLH + 12;
+        simCy += titleLines.length * titleLH + 10;  // title + gap
+        simCy += sumLines.length * bodyLH + 12;      // body + gap
         if(bulletData.length > 0){
-          doc.setFont('helvetica','normal'); doc.setFontSize(BULL_FS);
-          const bullLH = doc.getLineHeight();
           const bullTotal = bulletData.reduce((a,b)=>a+b.length,0);
-          simCy += 12 + bullTotal * bullLH + 10;
+          simCy += 12 + bullTotal * bullLH;           // box top-pad + lines (no bottom pad — matches render)
         }
         simCy += PAD_B;
-        const cardH = Math.ceil(simCy) + 10; // +10 safety
+        const cardH = Math.ceil(simCy) + 6; // +6 tight safety only
 
         // --- PASS 2: draw card box to exact measured height ---
         doc.setFillColor(...WHITE); doc.setDrawColor(...BORDER); doc.setLineWidth(0.5);
@@ -1337,24 +1338,20 @@
           cy += 26;
         }
 
-        // Title
+        // Title — use same titleLH from simulation
         doc.setFont('helvetica','bold'); doc.setFontSize(TITLE_FS); doc.setTextColor(...DARK);
         doc.text(titleLines, ML+15, cy);
-        doc.setFont('helvetica','bold'); doc.setFontSize(TITLE_FS);
-        cy += titleLines.length * doc.getLineHeight() + 10;
+        cy += titleLines.length * titleLH + 10;
 
-        // Body
+        // Body — use same bodyLH from simulation
         doc.setFont('helvetica','normal'); doc.setFontSize(BODY_FS); doc.setTextColor(...MID);
         doc.text(sumLines, ML+15, cy);
-        doc.setFont('helvetica','normal'); doc.setFontSize(BODY_FS);
-        cy += sumLines.length * doc.getLineHeight() + 12;
+        cy += sumLines.length * bodyLH + 12;
 
-        // Bullet box
+        // Bullet box — use same bullLH from simulation
         if(bulletData.length > 0){
-          doc.setFont('helvetica','normal'); doc.setFontSize(BULL_FS);
-          const bullLH = doc.getLineHeight();
           const bullTotal = bulletData.reduce((a,b)=>a+b.length,0);
-          const bullBoxH = 12 + bullTotal * bullLH + 10;
+          const bullBoxH = 12 + bullTotal * bullLH + 8; // match visual box height
           doc.setFillColor(...BGGRAY); doc.setDrawColor(235,235,240); doc.setLineWidth(0.3);
           doc.roundedRect(ML+15, cy, CW-30, bullBoxH, 3, 3, 'FD');
           cy += 12;
