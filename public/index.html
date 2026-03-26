@@ -1192,7 +1192,7 @@
     }
 
     function checkPage(y, neededH){
-      if(y + neededH > 810){ doc.addPage(); addHeader(hideClient); return 96; }
+      if(y + neededH > 750){ doc.addPage(); addHeader(hideClient); return 96; }
       return y;
     }
 
@@ -1259,51 +1259,50 @@
       items.forEach(note=>{
         const clientTxt = note.client && note.client!=='All' ? normalizeClient(note.client).toUpperCase() : null;
 
-        // Text widths — conservative to avoid overflow
-        const TITLE_W = CW - 100; // leave room for badge on right
+        const TITLE_W = CW - 100;
         const BODY_W  = CW - 30;
-        const BULL_W  = CW - 50;  // indent + bullet + right pad
-
-        // Font sizes
+        const BULL_W  = CW - 50;
         const TITLE_FS = 11, BODY_FS = 9.5, BULL_FS = 8.5;
+        const PAD_T = 16, PAD_B = 24;
 
-        // Split at correct font size (MUST set font before splitting)
+        // Split text (font must be set before each split)
         doc.setFont('helvetica','bold'); doc.setFontSize(TITLE_FS);
         const titleLines = doc.splitTextToSize(note.title||'', TITLE_W);
-
         doc.setFont('helvetica','normal'); doc.setFontSize(BODY_FS);
         const sumLines = doc.splitTextToSize(note.summary||note.description||'', BODY_W);
-
         doc.setFont('helvetica','normal'); doc.setFontSize(BULL_FS);
         const bulletData = (note.bullets||[]).map(b=>doc.splitTextToSize(b, BULL_W));
-        const bulletLineCount = bulletData.reduce((a,b)=>a+b.length,0);
 
-        // Use getLineHeight for precise measurements
+        // Rough estimate for page-break check only (generous)
+        const roughH = PAD_T + (note.beta?26:0) + titleLines.length*16 + sumLines.length*14
+          + bulletData.reduce((a,b)=>a+b.length,0)*13 + 60 + PAD_B;
+        y = checkPage(y, roughH);
+
+        // --- PASS 1: measure actual content height by simulating cy ---
+        let simCy = PAD_T;
+        if(clientTxt && !hideClient) simCy += 22;
+        if(note.beta) simCy += 26;
         doc.setFont('helvetica','bold'); doc.setFontSize(TITLE_FS);
         const titleLH = doc.getLineHeight();
+        simCy += titleLines.length * titleLH + 10;
         doc.setFont('helvetica','normal'); doc.setFontSize(BODY_FS);
         const bodyLH = doc.getLineHeight();
-        doc.setFont('helvetica','normal'); doc.setFontSize(BULL_FS);
-        const bullLH = doc.getLineHeight();
+        simCy += sumLines.length * bodyLH + 12;
+        if(bulletData.length > 0){
+          doc.setFont('helvetica','normal'); doc.setFontSize(BULL_FS);
+          const bullLH = doc.getLineHeight();
+          const bullTotal = bulletData.reduce((a,b)=>a+b.length,0);
+          simCy += 12 + bullTotal * bullLH + 10;
+        }
+        simCy += PAD_B;
+        const cardH = Math.ceil(simCy) + 10; // +10 safety
 
-        // Compute exact card height using real line heights
-        const PAD_T = 16, PAD_B = 20;
-        const clientH = (clientTxt && !hideClient) ? 22 : 0;
-        const betaH   = note.beta ? 26 : 0; // badge(13) + gap before title baseline(13)
-        const titleH  = Math.ceil(titleLines.length * titleLH) + 10;
-        const bodyH   = Math.ceil(sumLines.length  * bodyLH)  + 12;
-        const bullBoxH = bulletLineCount > 0
-          ? 12 + Math.ceil(bulletLineCount * bullLH) + 10
-          : 0;
-        const cardH = PAD_T + clientH + betaH + titleH + bodyH + bullBoxH + PAD_B + 24; // +24 buffer to prevent overflow
-
-        y = checkPage(y, cardH);
-
-        // Card background + left accent
+        // --- PASS 2: draw card box to exact measured height ---
         doc.setFillColor(...WHITE); doc.setDrawColor(...BORDER); doc.setLineWidth(0.5);
         doc.roundedRect(ML, y, CW, cardH, 4, 4, 'FD');
         doc.setFillColor(...TEAL); doc.rect(ML, y, 3, cardH, 'F');
 
+        // --- PASS 3: render content ---
         let cy = y + PAD_T;
 
         // Client tag
@@ -1314,10 +1313,10 @@
           doc.roundedRect(ML+12, cy-9, tw, 14, 3, 3, 'FD');
           doc.setTextColor(15,118,110);
           doc.text(clientTxt, ML+19, cy);
-          cy += clientH;
+          cy += 22;
         }
 
-        // Category badge — top right
+        // Category badge — top right of card
         doc.setFont('helvetica','bold'); doc.setFontSize(7);
         const badgeTxt = cat.toUpperCase();
         const bw = doc.getTextWidth(badgeTxt) + 16;
@@ -1326,7 +1325,7 @@
         doc.setTextColor(...badgeFg);
         doc.text(badgeTxt, ML+CW-bw-2, y+17);
 
-        // Beta badge — rendered at cy, advances cy by exact badge height + gap
+        // Beta badge
         if(note.beta){
           doc.setFont('helvetica','bold'); doc.setFontSize(7);
           const betaTxt='β BETA';
@@ -1335,21 +1334,27 @@
           doc.roundedRect(ML+15, cy, betaW, 13, 3, 3, 'FD');
           doc.setTextColor(124,58,237);
           doc.text(betaTxt, ML+21, cy+9);
-          cy += 26; // badge(13) + gap(13) so title baseline at cy+TITLE_FS clears badge bottom
+          cy += 26;
         }
 
         // Title
         doc.setFont('helvetica','bold'); doc.setFontSize(TITLE_FS); doc.setTextColor(...DARK);
         doc.text(titleLines, ML+15, cy);
-        cy += Math.ceil(titleLines.length * titleLH) + 10;
+        doc.setFont('helvetica','bold'); doc.setFontSize(TITLE_FS);
+        cy += titleLines.length * doc.getLineHeight() + 10;
 
         // Body
         doc.setFont('helvetica','normal'); doc.setFontSize(BODY_FS); doc.setTextColor(...MID);
         doc.text(sumLines, ML+15, cy);
-        cy += Math.ceil(sumLines.length * bodyLH) + 12;
+        doc.setFont('helvetica','normal'); doc.setFontSize(BODY_FS);
+        cy += sumLines.length * doc.getLineHeight() + 12;
 
         // Bullet box
         if(bulletData.length > 0){
+          doc.setFont('helvetica','normal'); doc.setFontSize(BULL_FS);
+          const bullLH = doc.getLineHeight();
+          const bullTotal = bulletData.reduce((a,b)=>a+b.length,0);
+          const bullBoxH = 12 + bullTotal * bullLH + 10;
           doc.setFillColor(...BGGRAY); doc.setDrawColor(235,235,240); doc.setLineWidth(0.3);
           doc.roundedRect(ML+15, cy, CW-30, bullBoxH, 3, 3, 'FD');
           cy += 12;
@@ -1358,7 +1363,7 @@
             doc.setTextColor(...TEAL); doc.text('•', ML+20, cy);
             doc.setTextColor(...MID);
             doc.text(bLines, ML+30, cy);
-            cy += Math.ceil(bLines.length * bullLH);
+            cy += bLines.length * bullLH;
           });
         }
 
