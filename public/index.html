@@ -1114,40 +1114,21 @@
       return doc.splitTextToSize(text || '', maxW);
     }
 
-    // Voiro logo mark — drawn as jsPDF vector paths (SVG coordinates scaled to fit)
-    // SVG viewBox: 0 0 60 38.89 (just the mark, not the wordmark text)
-    function drawVoiroMark(x, y, sz){
-      // sz = target height in points
-      const sx = sz / 38.89;
-      const sy = sz / 38.89;
-      function px(vx){ return x + vx * sx; }
-      function py(vy){ return y + vy * sy; }
-
-      // Teal arc (cls-1) — left sweep — solid white
-      doc.setFillColor(255,255,255);
-      doc.triangle(px(29.47),py(15.17), px(51.74),py(24.58), px(29.4),py(34.33),'F');
-
-      // Semi-white arc (cls-3) — top sweep
-      doc.setFillColor(255,255,255,0.5);
-      doc.triangle(px(53.83),py(23.81), px(30.56),py(14.14), px(53.85),py(24.19),'F');
-
-      // White arc (cls-2) — bottom sweep
-      doc.setFillColor(255,255,255);
-      doc.triangle(px(53.41),py(25.49), px(30.47),py(35.38), px(53.84),py(24.19),'F');
-    }
+    const VOIRO_LOGO_B64 = 'data:image/png;base64,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';
 
     function addHeader(hideClient){
       // Full-width teal header bar
       doc.setFillColor(...TEAL); doc.rect(0,0,W,76,'F');
 
-      // LEFT: Voiro mark + wordmark
-      const markH = 28; // height of mark in pts
-      const markY = (76 - markH) / 2; // vertically centred
-      drawVoiroMark(ML, markY, markH);
-
-      const markW = markH * (54 / 38.89); // proportional width of just the mark
+      // LEFT: Voiro logo mark (real PNG) + wordmark text
+      const logoH = 42; // pts tall
+      const logoW = 42; // square mark
+      const logoY = (76 - logoH) / 2;
+      try{
+        doc.addImage(VOIRO_LOGO_B64, 'PNG', ML, logoY, logoW, logoH);
+      }catch(e){}
       doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(255,255,255);
-      doc.text('Voiro', ML + markW + 6, 76/2 + 7);
+      doc.text('Voiro', ML + logoW + 7, 76/2 + 7);
 
       // CENTRE: "Release Notes"
       doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(255,255,255);
@@ -1159,7 +1140,7 @@
         doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
         doc.text(currentMeta.client, W-MR, 30, {align:'right'});
         doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(200,245,245);
-        doc.text(displayDate, W-MR, 48, {align:'right'});
+        doc.text(displayDate, W-MR, 52, {align:'right'});
       } else {
         doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(200,245,245);
         doc.text(displayDate, W-MR, 43, {align:'right'});
